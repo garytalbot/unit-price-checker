@@ -59,8 +59,10 @@ A price comparison tool is only useful if the math feels credible. This project 
 - **What if the shelf tag looks wrong?**
   - Enter the claimed unit price and unit. The app will show whether that label looks normal within rounding or noticeably off versus the math you entered.
 
-## Launch asset
+## Launch assets
 
+- `assets/launch/split-winner-social-card.png` — the new primary share card and Open Graph preview for the live site, built around the split-winner cereal example where the best unit price is not the cheapest actual checkout.
+- `assets/launch/split-winner-proof-shot.png` — the real in-app proof screenshot used inside the share card.
 - `assets/launch/reddit-real-use-oats-comparison.jpg` — filled real-use screenshot for launch posts, showing a realistic oats comparison with mixed units, a couponed bundle, target-amount mode, and a shelf-tag warning.
 
 ## Files that matter

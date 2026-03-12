@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Unit Price Checker social card showing the split between best unit price and cheapest actual checkout">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#140f29"/>
+      <stop offset="55%" stop-color="#1a1232"/>
+      <stop offset="100%" stop-color="#0d1120"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#251a49" stop-opacity="0.98"/>
+      <stop offset="100%" stop-color="#141126" stop-opacity="0.98"/>
+    </linearGradient>
+    <linearGradient id="stroke" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#8b5cf6" stop-opacity="0.75"/>
+      <stop offset="100%" stop-color="#22d3ee" stop-opacity="0.55"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="24" stdDeviation="26" flood-color="#04030b" flood-opacity="0.45"/>
+    </filter>
+    <clipPath id="shotClip">
+      <rect x="0" y="0" width="600" height="420" rx="28" ry="28"/>
+    </clipPath>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <circle cx="1090" cy="110" r="190" fill="#ec4899" opacity="0.12"/>
+  <circle cx="108" cy="514" r="180" fill="#8b5cf6" opacity="0.18"/>
+  <circle cx="909" cy="593" r="120" fill="#22d3ee" opacity="0.08"/>
+
+  <g transform="translate(64 64)">
+    <text x="0" y="18" fill="#f9a8d4" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700" letter-spacing="3.5">REAL GROCERY EXAMPLE</text>
+    <text x="0" y="98" fill="#f5f3ff" font-family="Inter, Arial, sans-serif" font-size="64" font-weight="800">Unit Price Checker</text>
+    <text x="0" y="150" fill="#ddd6fe" font-family="Inter, Arial, sans-serif" font-size="28">The best unit price and the cheapest register total can be two different winners.</text>
+
+    <g transform="translate(0 192)">
+      <rect width="448" height="68" rx="20" fill="#120f25" fill-opacity="0.74" stroke="#3b2f64"/>
+      <text x="24" y="28" fill="#f0abfc" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="700" letter-spacing="2.3">SPLIT WINNER</text>
+      <text x="24" y="53" fill="#f8fafc" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="700">Family size wins on oz. Store brand wins at checkout.</text>
+    </g>
+
+    <g transform="translate(0 286)">
+      <rect width="186" height="82" rx="22" fill="#13192d" stroke="#2b4467"/>
+      <text x="22" y="28" fill="#7dd3fc" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="700" letter-spacing="1.8">BEST UNIT PRICE</text>
+      <text x="22" y="58" fill="#f8fafc" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="800">$0.20 / oz</text>
+    </g>
+
+    <g transform="translate(202 286)">
+      <rect width="214" height="82" rx="22" fill="#151a2d" stroke="#36504f"/>
+      <text x="22" y="28" fill="#6ee7b7" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="700" letter-spacing="1.8">CHEAPEST CHECKOUT</text>
+      <text x="22" y="58" fill="#f8fafc" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="800">$9.58 for 2 boxes</text>
+    </g>
+
+    <g transform="translate(0 396)">
+      <rect width="440" height="76" rx="22" fill="#161225" stroke="#4c1d95"/>
+      <text x="22" y="31" fill="#c4b5fd" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="700" letter-spacing="1.8">WHY IT EXISTS</text>
+      <text x="22" y="58" fill="#e9d5ff" font-family="Inter, Arial, sans-serif" font-size="22">Target-amount mode catches the aisle lie instantly.</text>
+    </g>
+
+    <g transform="translate(474 24)" filter="url(#shadow)">
+      <rect width="630" height="500" rx="34" fill="url(#panel)" stroke="url(#stroke)" stroke-width="2"/>
+      <g transform="translate(15 18)">
+        <g clip-path="url(#shotClip)">
+          <image href="/root/.openclaw/workspace/unit-price-checker/assets/launch/split-winner-proof-shot.png" x="0" y="0" width="600" height="583.333" preserveAspectRatio="xMidYMin slice"/>
+        </g>
+        <rect x="0" y="0" width="600" height="420" rx="28" ry="28" fill="none" stroke="#ffffff" stroke-opacity="0.08"/>
+      </g>
+      <rect x="22" y="450" width="586" height="30" rx="15" fill="#100d1c" fill-opacity="0.88"/>
+      <text x="40" y="470" fill="#cbd5e1" font-family="Inter, Arial, sans-serif" font-size="17">Live static tool · mixed units · coupons · target amount · shelf-tag audits</text>
+    </g>
+  </g>
+</svg>
