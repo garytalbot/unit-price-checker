@@ -164,6 +164,17 @@ That’s the exact kind of mildly infuriating consumer math I wanted this to abs
 
 ## Posting notes
 
+### Ready-made real-use screenshot
+Use `assets/launch/reddit-real-use-oats-comparison.jpg` for the Reddit / community proof shot.
+
+What it shows:
+- a realistic oats comparison instead of empty demo chrome
+- mixed units (`oz` vs `lb`)
+- a couponed 2-pack sale bundle
+- target-amount mode set to `64 oz`
+- both winner states visible
+- one shelf-tag discrepancy warning
+
 ### Best screenshot
 Use a filled-in comparison state that shows:
 - at least 2 comparable items
