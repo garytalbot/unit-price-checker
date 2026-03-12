@@ -62,7 +62,8 @@ a:focus-visible {
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
 }
 
@@ -430,7 +431,8 @@ h3 {
 .summary-empty,
 .winner-card,
 .tips,
-.ranking-list li {
+.ranking-list li,
+.share-bundle {
   background: rgba(7, 13, 24, 0.84);
   border: 1px solid rgba(148, 163, 184, 0.14);
   border-radius: var(--radius-md);
@@ -438,7 +440,8 @@ h3 {
 
 .summary-empty,
 .winner-card,
-.tips {
+.tips,
+.share-bundle {
   padding: 1rem;
 }
 
@@ -472,6 +475,37 @@ h3 {
   margin: 0 0 1rem;
   display: grid;
   gap: 0.8rem;
+}
+
+.share-bundle {
+  display: grid;
+  gap: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.share-bundle-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.share-bundle-header h3,
+.share-bundle-copy,
+.share-bundle-status {
+  margin-bottom: 0;
+}
+
+.share-bundle-text {
+  width: 100%;
+  min-height: 10rem;
+  resize: vertical;
+  background: rgba(8, 15, 29, 0.95);
+  color: var(--text);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: var(--radius-sm);
+  padding: 0.9rem;
+  line-height: 1.5;
 }
 
 .ranking-list li {
@@ -643,7 +677,8 @@ h3 {
 
   .panel-heading,
   .target-planner-header,
-  .trust-intro {
+  .trust-intro,
+  .share-bundle-header {
     flex-direction: column;
   }
 }

@@ -2,6 +2,7 @@ const STORAGE_KEY = "unit-price-checker-state-v1";
 const ITEM_COUNT = 3;
 const SHELF_TAG_TOLERANCE_PERCENT = 0.02;
 const SHELF_TAG_TOLERANCE_ABSOLUTE = 0.005;
+const DEFAULT_SHARE_BUNDLE_STATUS = "Updates automatically as you type.";
 
 const UNITS = [
   { value: "g", label: "grams (g)", shortLabel: "g", family: "weight", factor: 1 },
@@ -82,12 +83,18 @@ const elements = {
   tripPriceLine: document.querySelector("#trip-price-line"),
   tripContext: document.querySelector("#trip-context"),
   rankingList: document.querySelector("#ranking-list"),
+  shareBundle: document.querySelector("#share-bundle"),
+  shareBundleText: document.querySelector("#share-bundle-text"),
+  shareBundleStatus: document.querySelector("#share-bundle-status"),
+  copyVerdict: document.querySelector("#copy-verdict"),
   loadSample: document.querySelector("#load-sample"),
   copyLink: document.querySelector("#copy-link"),
   resetForm: document.querySelector("#reset-form"),
 };
 
 let state = loadState();
+let currentShareBundleText = "";
+let copyVerdictResetTimer = 0;
 
 renderCards();
 applyStateToForm();
@@ -265,6 +272,47 @@ function bindEvents() {
       elements.copyLink.textContent = original;
     }, 1400);
   });
+
+  elements.copyVerdict.addEventListener("click", async () => {
+    if (!currentShareBundleText) {
+      setShareBundleStatus("Add at least one comparable result first.");
+      return;
+    }
+
+    const original = elements.copyVerdict.textContent;
+    let copied = false;
+    let selectedForManualCopy = false;
+
+    try {
+      await navigator.clipboard.writeText(currentShareBundleText);
+      copied = true;
+    } catch (error) {
+      console.warn("Clipboard write failed", error);
+      selectedForManualCopy = selectShareBundleText();
+    }
+
+    elements.copyVerdict.textContent = copied
+      ? "Verdict copied"
+      : selectedForManualCopy
+        ? "Text selected"
+        : "Copy failed";
+    setShareBundleStatus(
+      copied
+        ? "Copied the plain-English verdict and exact share link."
+        : selectedForManualCopy
+          ? "Clipboard blocked. The verdict text is selected so you can copy it manually."
+          : "Copy failed. You can still select the verdict text manually.",
+    );
+
+    window.clearTimeout(copyVerdictResetTimer);
+    copyVerdictResetTimer = window.setTimeout(() => {
+      elements.copyVerdict.textContent = original;
+      setShareBundleStatus(DEFAULT_SHARE_BUNDLE_STATUS);
+    }, 1600);
+  });
+
+  elements.shareBundleText.addEventListener("focus", selectShareBundleText);
+  elements.shareBundleText.addEventListener("click", selectShareBundleText);
 }
 
 function handleCardInput(event) {
@@ -282,6 +330,19 @@ function handleCardInput(event) {
   }
 
   update();
+}
+
+function selectShareBundleText() {
+  if (!currentShareBundleText || !elements.shareBundleText) return false;
+  elements.shareBundleText.focus();
+  elements.shareBundleText.select();
+  elements.shareBundleText.setSelectionRange(0, elements.shareBundleText.value.length);
+  return true;
+}
+
+function setShareBundleStatus(message) {
+  if (!elements.shareBundleStatus) return;
+  elements.shareBundleStatus.textContent = message;
 }
 
 function update() {
@@ -315,14 +376,15 @@ function update() {
     ({ metrics }) => metrics.complete && !metrics.sameFamily,
   ).length;
   const shelfAudits = evaluated.filter(({ metrics }) => metrics.complete && metrics.shelfTagAudit);
-  const suspiciousShelfAudits = shelfAudits.filter(
+  const suspiciousShelfEntries = shelfAudits.filter(
     ({ metrics }) => metrics.shelfTagAudit.status !== "close",
-  ).length;
+  );
 
   updateFamilyWarning(activeFamily, excludedCount);
-  updateShelfAuditNotice(shelfAudits.length, suspiciousShelfAudits);
+  updateShelfAuditNotice(shelfAudits.length, suspiciousShelfEntries.length);
   updateCards(evaluated, winner, comparisonUnitMeta, targetPlan, tripWinner);
   updateSummary(entries, winner, comparisonUnitMeta, excludedCount, targetPlan, tripWinner);
+  updateShareBundle(winner, comparisonUnitMeta, targetPlan, tripWinner, suspiciousShelfEntries);
   persistState();
   syncHash();
 }
@@ -684,6 +746,84 @@ function updateSummary(entries, winner, comparisonUnitMeta, excludedCount, targe
       `;
     })
     .join("");
+}
+
+function updateShareBundle(winner, comparisonUnitMeta, targetPlan, tripWinner, suspiciousShelfEntries) {
+  if (!winner || !comparisonUnitMeta) {
+    currentShareBundleText = "";
+    elements.shareBundle.classList.add("hidden");
+    elements.shareBundleText.value = "";
+    setShareBundleStatus(DEFAULT_SHARE_BUNDLE_STATUS);
+    return;
+  }
+
+  currentShareBundleText = buildShareBundle(
+    winner,
+    comparisonUnitMeta,
+    targetPlan,
+    tripWinner,
+    suspiciousShelfEntries,
+  );
+  elements.shareBundle.classList.remove("hidden");
+  elements.shareBundleText.value = currentShareBundleText;
+  elements.shareBundleText.rows = Math.max(5, currentShareBundleText.split("\n").length + 1);
+  setShareBundleStatus(DEFAULT_SHARE_BUNDLE_STATUS);
+}
+
+function buildShareBundle(winner, comparisonUnitMeta, targetPlan, tripWinner, suspiciousShelfEntries) {
+  const winnerName = winner.item.name.trim() || `Option ${winner.index + 1}`;
+  const lines = [
+    "Unit Price Checker verdict:",
+    `Best unit-price pick: ${winnerName} at ${formatMoney(winner.metrics.unitPrice)} / ${comparisonUnitMeta.shortLabel}.`,
+  ];
+
+  if (targetPlan && tripWinner?.tripPlan) {
+    const targetLabel = formatMeasurement(targetPlan.amount, targetPlan.unitMeta.shortLabel);
+    const tripWinnerName = tripWinner.item.name.trim() || `Option ${tripWinner.index + 1}`;
+    const packageLabel = tripWinner.tripPlan.purchases === 1 ? "package" : "packages";
+    const extraLabel = tripWinner.tripPlan.surplusAmount > 0
+      ? `, ${formatMeasurement(tripWinner.tripPlan.surplusAmount, targetPlan.unitMeta.shortLabel)} extra`
+      : "";
+
+    if (tripWinner.index === winner.index) {
+      lines.push(
+        `For ${targetLabel}, that same option is also the cheapest actual checkout: ${formatMoney(tripWinner.tripPlan.tripCost)} total (buy ${tripWinner.tripPlan.purchases} ${packageLabel}${extraLabel}).`,
+      );
+    } else {
+      lines.push(
+        `Cheapest actual checkout for ${targetLabel}: ${tripWinnerName} at ${formatMoney(tripWinner.tripPlan.tripCost)} total (buy ${tripWinner.tripPlan.purchases} ${packageLabel}${extraLabel}).`,
+      );
+    }
+  }
+
+  const shelfWarningLine = buildShareShelfWarningLine(suspiciousShelfEntries);
+  if (shelfWarningLine) {
+    lines.push(shelfWarningLine);
+  }
+
+  lines.push(`Exact comparison: ${buildShareUrl()}`);
+  return lines.join("\n");
+}
+
+function buildShareShelfWarningLine(suspiciousShelfEntries) {
+  if (!suspiciousShelfEntries.length) {
+    return "";
+  }
+
+  if (suspiciousShelfEntries.length === 1) {
+    const [entry] = suspiciousShelfEntries;
+    const name = entry.item.name.trim() || `Option ${entry.index + 1}`;
+    const audit = entry.metrics.shelfTagAudit;
+
+    return `Shelf-tag warning: ${name} looks off — tag says ${formatMoney(audit.claimedUnitPrice)} / ${audit.unitMeta.shortLabel}, entered math lands at ${formatMoney(audit.computedUnitPrice)} / ${audit.unitMeta.shortLabel}.`;
+  }
+
+  const names = suspiciousShelfEntries.map((entry) => entry.item.name.trim() || `Option ${entry.index + 1}`);
+  const previewNames = names.slice(0, 2).join(", ");
+  const remainingCount = Math.max(0, names.length - 2);
+  const nameTail = remainingCount ? `, +${remainingCount} more` : "";
+
+  return `Shelf-tag warning: ${suspiciousShelfEntries.length} tags look off (${previewNames}${nameTail}).`;
 }
 
 function updateFamilyWarning(activeFamily, excludedCount) {

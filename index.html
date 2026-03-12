@@ -66,7 +66,7 @@
           "Include pack counts and coupons",
           "Show the cheapest package for a real target amount",
           "Audit claimed shelf-tag unit prices against the entered math",
-          "Generate shareable links with the current comparison"
+          "Generate a copyable plain-English verdict plus a shareable link with the current comparison"
         ],
         "browserRequirements": "Requires JavaScript and a modern browser."
       }
@@ -224,6 +224,31 @@
             </div>
 
             <ol id="ranking-list" class="ranking-list"></ol>
+
+            <div id="share-bundle" class="share-bundle hidden">
+              <div class="share-bundle-header">
+                <div>
+                  <p class="winner-label">Copyable verdict</p>
+                  <h3>Share the answer without rewriting it</h3>
+                </div>
+                <button id="copy-verdict" class="button secondary" type="button">
+                  Copy verdict + link
+                </button>
+              </div>
+              <p class="microcopy share-bundle-copy">
+                One tap copies a plain-English summary with the best unit-price winner, the real checkout winner when target mode changes the answer, any shelf-tag warning, and the exact live link.
+              </p>
+              <textarea
+                id="share-bundle-text"
+                class="share-bundle-text"
+                readonly
+                rows="6"
+                aria-label="Copyable verdict text"
+              ></textarea>
+              <p id="share-bundle-status" class="microcopy share-bundle-status" aria-live="polite">
+                Updates automatically as you type.
+              </p>
+            </div>
           </div>
 
           <div class="tips">
@@ -263,7 +288,7 @@
           </article>
           <article>
             <h3>Shareable state</h3>
-            <p>Copy a link with the current comparison baked in. Handy for sending “which one should I buy?” debates to somebody else.</p>
+            <p>Copy the exact link or a plain-English verdict bundle with the current comparison baked in. Handy for sending “which one should I buy?” debates to somebody else.</p>
           </article>
         </div>
       </section>
@@ -339,7 +364,7 @@
         </div>
 
         <p class="share-note">
-          If this saves somebody from fake shelf-tag math, use <strong>Copy share link</strong> and send it to the household spreadsheet tyrant in your life.
+          If this saves somebody from fake shelf-tag math, use the <strong>copyable verdict</strong> card and send the winner, warning, and exact link to the household spreadsheet tyrant in your life.
         </p>
       </section>
 

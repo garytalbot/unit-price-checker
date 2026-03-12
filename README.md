@@ -28,6 +28,7 @@ People do this math constantly, and most “price per ounce” tools online are 
 - Compare up to **3 options** side by side
 - Supports **weight**, **volume**, and **count** measurements
 - Handles **oz, lb, g, kg, mL, L, fl oz, cup, pint, quart, gallon, each, dozen**
+- **Copyable plain-English verdict bundle** that includes the winner, the real checkout winner when target mode changes the answer, any shelf-tag warning, and the exact share URL
 - **Shareable URL state** for sending the current comparison to someone else
 - Saves your last comparison locally with **localStorage**
 - Optional **shelf-tag audit** input that compares a claimed aisle unit price against the price, pack count, and coupon you entered
@@ -42,6 +43,7 @@ A price comparison tool is only useful if the math feels credible. This project 
 - **Local-only persistence** — your last comparison stays in your own browser unless you intentionally copy a share link
 - **Honest exclusions** — weight, volume, and count do not get ranked together
 - **Shelf-tag audit** — optional claimed unit-price checks help catch aisle labels that do not line up with the price, pack count, and coupon entered here
+- **Copyable verdict** — the summary card can now copy a plain-English winner/check-out/warning bundle with the exact live comparison URL in one tap
 - **Whole-package target math** — target mode rounds up to real packages because stores do not sell fractional cereal boxes unless society has changed dramatically
 
 ## FAQ highlights

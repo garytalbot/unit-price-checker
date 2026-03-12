@@ -19,7 +19,7 @@ It is strongest when framed as:
 - pack deals like 3 for $5
 - coupon / discount math
 - compare up to 3 options side by side
-- shareable URL state
+- shareable URL state plus a copyable plain-English verdict bundle
 - localStorage persistence
 - static site, no backend, no sign-in
 
