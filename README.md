@@ -64,6 +64,7 @@ A price comparison tool is only useful if the math feels credible. This project 
 - `assets/launch/split-winner-social-card.png` — the new primary share card and Open Graph preview for the live site, built around the split-winner cereal example where the best unit price is not the cheapest actual checkout.
 - `assets/launch/split-winner-proof-shot.png` — the real in-app proof screenshot used inside the share card.
 - `assets/launch/reddit-real-use-oats-comparison.jpg` — filled real-use screenshot for launch posts, showing a realistic oats comparison with mixed units, a couponed bundle, target-amount mode, and a shelf-tag warning.
+- `assets/favicon-512.png` plus derived app icons (`icon-192.png`, `icon-512.png`, `apple-touch-icon.png`, and PNG favicons) now power the live favicon/app-icon surface instead of leaving the repo with a nice icon that browsers and homescreens mostly never saw.
 
 ## Files that matter
 
