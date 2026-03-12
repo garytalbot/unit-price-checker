@@ -40,6 +40,68 @@
     <link rel="manifest" href="site.webmanifest" />
     <link rel="stylesheet" href="assets/styles.css" />
     <script defer src="assets/app.js"></script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Unit Price Checker",
+        "applicationCategory": "UtilitiesApplication",
+        "operatingSystem": "Any",
+        "isAccessibleForFree": true,
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "description": "Free browser-based grocery unit price comparison tool for pack counts, coupons, mixed units, and target-amount trip costs.",
+        "url": "https://garytalbot.github.io/unit-price-checker/",
+        "creator": {
+          "@type": "Person",
+          "name": "Gary Talbot",
+          "url": "https://github.com/garytalbot"
+        },
+        "featureList": [
+          "Compare up to three grocery or household options side by side",
+          "Handle mixed weight, volume, and count units",
+          "Include pack counts and coupons",
+          "Show the cheapest package for a real target amount",
+          "Generate shareable links with the current comparison"
+        ],
+        "browserRequirements": "Requires JavaScript and a modern browser."
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Does Unit Price Checker send my grocery prices anywhere?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "No. Unit Price Checker is a static site with no backend. It stores your last comparison in your own browser, and only creates a shareable URL when you explicitly copy a link."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Why can the unit-price winner and the checkout winner be different?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Stores sell whole packages. A package with the best unit price can still cost more at checkout if it makes you buy more than you actually need."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Why are some items excluded from the ranking?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "The tool only ranks items within the same measurement family. Weight, volume, and count items are kept separate so the math stays honest."
+            }
+          }
+        ]
+      }
+    </script>
   </head>
   <body>
     <div class="app-shell">
@@ -190,9 +252,77 @@
         </div>
       </section>
 
+      <section class="trust-strip panel" aria-labelledby="trust-heading">
+        <div class="trust-intro">
+          <div>
+            <p class="kicker">Help, trust, and sharing</p>
+            <h2 id="trust-heading">
+              Here’s how the math works, what stays private, and why two “winners” can both be real.
+            </h2>
+          </div>
+          <p>
+            This thing is intentionally boring in the best way: plain browser math, no login, no backend,
+            and no mysterious “smart shopping” box pretending a dozen is a liquid.
+          </p>
+        </div>
+
+        <div class="trust-grid">
+          <article class="trust-card">
+            <h3>How to use it in 30 seconds</h3>
+            <ol class="trust-list">
+              <li>Enter the sticker price, size, unit, and optional pack count for each option.</li>
+              <li>Add any coupon or discount so the checkout math reflects reality instead of shelf-tag fan fiction.</li>
+              <li>Use target amount if you need a real quantity and want the cheapest total, not just the prettiest unit price.</li>
+            </ol>
+          </article>
+
+          <article class="trust-card">
+            <h3>Why people can trust the result</h3>
+            <ul class="trust-list">
+              <li>Mixed measurement families are excluded instead of being fake-converted into nonsense.</li>
+              <li>Coupons come off before unit math, so “sale” actually means sale.</li>
+              <li>Target mode rounds up to whole packages because stores, tragically, refuse to sell 0.43 of a cereal box.</li>
+              <li>Your last comparison stays in this browser unless you deliberately copy a share link.</li>
+            </ul>
+          </article>
+
+          <article class="trust-card faq-card">
+            <h3>FAQ</h3>
+
+            <details open>
+              <summary>Does it send my prices anywhere?</summary>
+              <p>
+                No. The app is just static files. There is no account, no database, and no server-side calculator quietly collecting your grocery aisle crimes.
+              </p>
+            </details>
+
+            <details>
+              <summary>Why can the unit-price winner and checkout winner be different?</summary>
+              <p>
+                The best value per ounce is not always the cheapest total at the register. If the biggest pack makes you overshoot your target,
+                a worse unit price can still win the real trip total.
+              </p>
+            </details>
+
+            <details>
+              <summary>Why did one item get excluded?</summary>
+              <p>
+                Only items in the same measurement family rank together. Weight, volume, and count stay separate on purpose so the math does not freestyle into cursed soup.
+              </p>
+            </details>
+          </article>
+        </div>
+
+        <p class="share-note">
+          If this saves somebody from fake shelf-tag math, use <strong>Copy share link</strong> and send it to the household spreadsheet tyrant in your life.
+        </p>
+      </section>
+
       <footer class="site-footer">
         <p>
-          Built as a no-backend static tool. Save it, share it, or deploy it anywhere that can serve plain files.
+          Built by <a href="https://github.com/garytalbot">Gary Talbot</a> as a no-backend static tool.
+          <a href="https://github.com/garytalbot/unit-price-checker/">View source on GitHub</a>
+          or <a href="https://garytalbot.github.io/garytalbot-site/work/">see the rest of the tool pile</a>.
         </p>
       </footer>
     </div>

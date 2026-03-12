@@ -49,6 +49,17 @@ img {
   max-width: 100%;
 }
 
+a {
+  color: #7dd3fc;
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.18em;
+}
+
+a:hover,
+a:focus-visible {
+  color: #bae6fd;
+}
+
 button,
 input,
 select {
@@ -498,6 +509,93 @@ h3 {
   padding: 1rem;
 }
 
+.trust-strip {
+  margin-top: 1.25rem;
+  border-radius: var(--radius-lg);
+  padding: 1.35rem;
+}
+
+.trust-intro {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.trust-intro > p {
+  max-width: 30rem;
+  margin-bottom: 0;
+  color: var(--muted);
+}
+
+.trust-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 0.9rem;
+}
+
+.trust-card {
+  background: rgba(7, 13, 24, 0.84);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+}
+
+.trust-list {
+  margin-bottom: 0;
+  padding-left: 1.15rem;
+  color: var(--muted);
+}
+
+.trust-list li + li {
+  margin-top: 0.55rem;
+}
+
+.faq-card details {
+  border-top: 1px solid rgba(148, 163, 184, 0.14);
+  padding: 0.85rem 0;
+}
+
+.faq-card details:first-of-type {
+  border-top: 0;
+  padding-top: 0.25rem;
+}
+
+.faq-card details:last-of-type {
+  padding-bottom: 0;
+}
+
+.faq-card summary {
+  cursor: pointer;
+  font-weight: 700;
+  list-style: none;
+}
+
+.faq-card summary::-webkit-details-marker {
+  display: none;
+}
+
+.faq-card summary::after {
+  content: "+";
+  float: right;
+  color: var(--accent);
+}
+
+.faq-card details[open] summary::after {
+  content: "–";
+}
+
+.faq-card p {
+  margin: 0.65rem 0 0;
+  color: var(--muted);
+}
+
+.share-note {
+  margin: 1rem 0 0;
+  color: var(--muted);
+}
+
 .site-footer {
   padding: 1rem 0 0;
   text-align: center;
@@ -514,7 +612,8 @@ h3 {
   }
 
   .panel-heading,
-  .target-planner-header {
+  .target-planner-header,
+  .trust-intro {
     flex-direction: column;
   }
 }
@@ -528,7 +627,8 @@ h3 {
   .hero,
   .controls-panel,
   .summary-panel,
-  .feature-strip {
+  .feature-strip,
+  .trust-strip {
     padding: 1rem;
     border-radius: 20px;
   }

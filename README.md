@@ -31,6 +31,25 @@ People do this math constantly, and most “price per ounce” tools online are 
 - **Shareable URL state** for sending the current comparison to someone else
 - Saves your last comparison locally with **localStorage**
 - Includes **GitHub Pages** workflow and **Netlify** config for painless deployment
+- Adds on-page **help / FAQ / trust** copy so normal people can understand the math without reading the source
+
+## Trust notes
+
+A price comparison tool is only useful if the math feels credible. This project now makes that explicit in the public-facing copy:
+
+- **No backend** — the app is just static files running in the browser
+- **Local-only persistence** — your last comparison stays in your own browser unless you intentionally copy a share link
+- **Honest exclusions** — weight, volume, and count do not get ranked together
+- **Whole-package target math** — target mode rounds up to real packages because stores do not sell fractional cereal boxes unless society has changed dramatically
+
+## FAQ highlights
+
+- **Why can the unit-price winner and checkout winner be different?**
+  - Because the best per-ounce value can still force you to buy more than you need.
+- **Why are some items excluded?**
+  - Because mixed measurement families stay separate on purpose.
+- **Does it send my prices anywhere?**
+  - No. There is no server-side calculator and no account system.
 
 ## Files that matter
 
