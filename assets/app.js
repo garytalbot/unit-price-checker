@@ -85,6 +85,177 @@ const SAMPLE_STATE = {
   ],
 };
 
+const STARTER_PRESETS = [
+  {
+    id: "cereal",
+    label: "Breakfast cereal",
+    description: "18 oz vs family size vs warehouse bag",
+    state: {
+      comparisonUnit: "oz",
+      targetAmount: "36",
+      targetUnit: "oz",
+      items: [
+        {
+          name: "Store brand cereal",
+          price: "4.79",
+          size: "18",
+          unit: "oz",
+          packCount: "1",
+          coupon: "0",
+          shelfTagPrice: "0.27",
+          shelfTagUnit: "oz",
+        },
+        {
+          name: "Family size cereal",
+          price: "6.99",
+          size: "27.5",
+          unit: "oz",
+          packCount: "1",
+          coupon: "1.50",
+          shelfTagPrice: "0.25",
+          shelfTagUnit: "oz",
+        },
+        {
+          name: "Warehouse cereal bag",
+          price: "9.98",
+          size: "40",
+          unit: "oz",
+          packCount: "1",
+          coupon: "0",
+          shelfTagPrice: "0.28",
+          shelfTagUnit: "oz",
+        },
+      ],
+    },
+  },
+  {
+    id: "paper-towels",
+    label: "Paper towels",
+    description: "2-pack vs 6-pack vs coupon bundle",
+    state: {
+      comparisonUnit: "each",
+      targetAmount: "6",
+      targetUnit: "each",
+      items: [
+        {
+          name: "Store brand 2-pack",
+          price: "4.49",
+          size: "2",
+          unit: "each",
+          packCount: "1",
+          coupon: "0",
+          shelfTagPrice: "2.25",
+          shelfTagUnit: "each",
+        },
+        {
+          name: "Club 6-pack",
+          price: "10.99",
+          size: "6",
+          unit: "each",
+          packCount: "1",
+          coupon: "0",
+          shelfTagPrice: "1.83",
+          shelfTagUnit: "each",
+        },
+        {
+          name: "Name brand 3-pack deal",
+          price: "7.99",
+          size: "3",
+          unit: "each",
+          packCount: "1",
+          coupon: "1.00",
+          shelfTagPrice: "2.33",
+          shelfTagUnit: "each",
+        },
+      ],
+    },
+  },
+  {
+    id: "sparkling-water",
+    label: "Sparkling water",
+    description: "Single cans vs 8-pack vs 12-pack",
+    state: {
+      comparisonUnit: "floz",
+      targetAmount: "96",
+      targetUnit: "floz",
+      items: [
+        {
+          name: "Single cans",
+          price: "5.00",
+          size: "12",
+          unit: "floz",
+          packCount: "4",
+          coupon: "0",
+          shelfTagPrice: "0.10",
+          shelfTagUnit: "floz",
+        },
+        {
+          name: "8-pack lime",
+          price: "5.99",
+          size: "12",
+          unit: "floz",
+          packCount: "8",
+          coupon: "0",
+          shelfTagPrice: "0.06",
+          shelfTagUnit: "floz",
+        },
+        {
+          name: "12-pack variety",
+          price: "8.99",
+          size: "12",
+          unit: "floz",
+          packCount: "12",
+          coupon: "1.00",
+          shelfTagPrice: "0.07",
+          shelfTagUnit: "floz",
+        },
+      ],
+    },
+  },
+  {
+    id: "coffee",
+    label: "Ground coffee",
+    description: "12 oz bag vs 20 oz can vs warehouse whole bean",
+    state: {
+      comparisonUnit: "oz",
+      targetAmount: "24",
+      targetUnit: "oz",
+      items: [
+        {
+          name: "Store brand bag",
+          price: "7.99",
+          size: "12",
+          unit: "oz",
+          packCount: "1",
+          coupon: "0",
+          shelfTagPrice: "0.67",
+          shelfTagUnit: "oz",
+        },
+        {
+          name: "Name brand can",
+          price: "12.49",
+          size: "20",
+          unit: "oz",
+          packCount: "1",
+          coupon: "2.00",
+          shelfTagPrice: "0.52",
+          shelfTagUnit: "oz",
+        },
+        {
+          name: "Warehouse whole bean",
+          price: "18.99",
+          size: "2.5",
+          unit: "lb",
+          packCount: "1",
+          coupon: "0",
+          shelfTagPrice: "0.50",
+          shelfTagUnit: "oz",
+        },
+      ],
+    },
+  },
+];
+
 const elements = {
   cards: document.querySelector("#cards"),
   template: document.querySelector("#item-template"),
@@ -92,6 +263,7 @@ const elements = {
   targetAmount: document.querySelector("#target-amount"),
   targetUnit: document.querySelector("#target-unit"),
   targetPresets: document.querySelector("#target-presets"),
+  starterPresets: document.querySelector("#starter-presets"),
   familyWarning: document.querySelector("#family-warning"),
   shelfAuditNotice: document.querySelector("#shelf-audit-notice"),
   summaryEmpty: document.querySelector("#summary-empty"),
@@ -118,6 +290,7 @@ let currentShareBundleText = "";
 let copyVerdictResetTimer = 0;
 
 renderCards();
+renderStarterPresets();
 applyStateToForm();
 bindEvents();
 update();
@@ -281,6 +454,18 @@ function bindEvents() {
     update();
   });
 
+  elements.starterPresets?.addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-preset-id]");
+    if (!button) return;
+
+    const preset = STARTER_PRESETS.find((entry) => entry.id === button.dataset.presetId);
+    if (!preset) return;
+
+    state = normalizeState(preset.state);
+    applyStateToForm();
+    update();
+  });
+
   elements.resetForm.addEventListener("click", () => {
     state = createDefaultState();
     applyStateToForm();
@@ -419,6 +604,19 @@ function update() {
   updateShareBundle(winner, comparisonUnitMeta, targetPlan, tripWinner, suspiciousShelfEntries);
   persistState();
   syncHash();
+}
+
+function renderStarterPresets() {
+  if (!elements.starterPresets) return;
+
+  elements.starterPresets.innerHTML = STARTER_PRESETS.map((preset) => {
+    return `
+      <button class="starter-preset" type="button" data-preset-id="${preset.id}">
+        <span class="starter-preset-label">${escapeHtml(preset.label)}</span>
+        <span class="starter-preset-description">${escapeHtml(preset.description)}</span>
+      </button>
+    `;
+  }).join("");
 }
 
 function syncComparisonUnitOptions(completeItems) {
