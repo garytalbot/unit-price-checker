@@ -6,7 +6,7 @@
     <title>Unit Price Checker — Compare grocery sizes and sale prices fast</title>
     <meta
       name="description"
-      content="A free static web tool for comparing groceries, drinks, and household items by real cost per unit. Handles pack counts, coupons, and mixed units like oz, lb, mL, and liters."
+      content="A free static web tool for comparing groceries, drinks, and household items by real cost per unit. Handles pack counts, coupons, mixed units, and target-amount trip costs."
     />
     <meta name="theme-color" content="#0f172a" />
     <meta name="color-scheme" content="dark light" />
@@ -16,7 +16,7 @@
     <meta property="og:title" content="Unit Price Checker" />
     <meta
       property="og:description"
-      content="Compare groceries, drinks, and household items by actual cost per unit. Built for the eternal 'is the bigger one actually cheaper?' debate."
+      content="Compare groceries, drinks, and household items by actual cost per unit — and see which option is cheapest for the amount you actually need to buy."
     />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://garytalbot.github.io/unit-price-checker/" />
@@ -29,7 +29,7 @@
     <meta name="twitter:title" content="Unit Price Checker" />
     <meta
       name="twitter:description"
-      content="A quick static tool for comparing price-per-unit across grocery sizes, pack counts, and sale prices."
+      content="A quick static tool for comparing price-per-unit across grocery sizes, pack counts, sale prices, and real trip totals."
     />
     <meta
       name="twitter:image"
@@ -60,7 +60,7 @@
         <ul class="hero-notes">
           <li>Use <strong>pack count</strong> for deals like 3 for $5.</li>
           <li>Add a <strong>coupon</strong> to see the real checkout price.</li>
-          <li>Switch the <strong>comparison unit</strong> to ounces, grams, liters, or count.</li>
+          <li>Set a <strong>target amount</strong> to see the cheapest total for what you actually need.</li>
         </ul>
       </header>
 
@@ -85,6 +85,38 @@
             </p>
           </div>
 
+          <div class="target-planner" aria-labelledby="target-heading">
+            <div class="target-planner-header">
+              <div>
+                <p class="kicker">Need-based mode</p>
+                <h3 id="target-heading">How much do you actually need?</h3>
+              </div>
+              <p class="microcopy">
+                Optional, but useful. Unit price is not always the cheapest checkout total when package sizes are weird.
+              </p>
+            </div>
+
+            <div class="target-fields">
+              <label>
+                Target amount
+                <input
+                  id="target-amount"
+                  class="field"
+                  type="number"
+                  inputmode="decimal"
+                  min="0"
+                  step="0.01"
+                  placeholder="64"
+                />
+              </label>
+
+              <label>
+                Target unit
+                <select id="target-unit" class="field"></select>
+              </label>
+            </div>
+          </div>
+
           <div id="family-warning" class="notice warning hidden" role="alert"></div>
 
           <div id="cards" class="cards" aria-live="polite"></div>
@@ -105,10 +137,17 @@
 
           <div id="summary-content" class="hidden">
             <div class="winner-card">
-              <p class="winner-label">Cheapest option</p>
+              <p class="winner-label">Cheapest per unit</p>
               <h3 id="winner-name">—</h3>
               <p id="winner-price-line" class="winner-price-line"></p>
               <p id="winner-context" class="winner-context"></p>
+            </div>
+
+            <div id="trip-card" class="winner-card trip-card hidden">
+              <p class="winner-label">Cheapest for your target</p>
+              <h3 id="trip-winner-name">—</h3>
+              <p id="trip-price-line" class="winner-price-line"></p>
+              <p id="trip-context" class="winner-context"></p>
             </div>
 
             <ol id="ranking-list" class="ranking-list"></ol>
@@ -119,7 +158,7 @@
             <ul>
               <li>For a sale like <strong>3 for $5</strong>, set price to <strong>$5.00</strong> and pack count to <strong>3</strong>.</li>
               <li>You can compare <strong>32 oz</strong> against <strong>2 lb</strong> without doing conversion math in your head like it’s 2007.</li>
-              <li><strong>Match price</strong> shows the exact price an option would need to hit to tie the current winner.</li>
+              <li>Use <strong>target amount</strong> when you need a specific quantity and want the cheapest actual checkout total, not just the best unit price.</li>
             </ul>
           </div>
         </aside>
@@ -139,6 +178,10 @@
           <article>
             <h3>Sale-aware pricing</h3>
             <p>Pack counts and coupons are built in, so the result reflects what you actually pay instead of the fantasy sticker price.</p>
+          </article>
+          <article>
+            <h3>Need-based totals</h3>
+            <p>See which option is cheapest for the amount you actually need, because the best unit price does not always win the real checkout.</p>
           </article>
           <article>
             <h3>Shareable state</h3>
@@ -245,6 +288,10 @@
           <div class="metric">
             <span class="metric-label">Match price</span>
             <strong class="match-price">—</strong>
+          </div>
+          <div class="metric trip-metric hidden">
+            <span class="metric-label">Trip cost</span>
+            <strong class="trip-cost">—</strong>
           </div>
           <p class="metric-note">Fill in price, size, and unit to compare.</p>
         </div>

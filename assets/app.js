@@ -26,6 +26,8 @@ const DEFAULT_UNIT_BY_FAMILY = {
 
 const SAMPLE_STATE = {
   comparisonUnit: "oz",
+  targetAmount: "64",
+  targetUnit: "oz",
   items: [
     {
       name: "Store brand oats",
@@ -54,21 +56,22 @@ const SAMPLE_STATE = {
   ],
 };
 
-const numberFormatter = new Intl.NumberFormat("en-US", {
-  minimumFractionDigits: 0,
-  maximumFractionDigits: 2,
-});
-
 const elements = {
   cards: document.querySelector("#cards"),
   template: document.querySelector("#item-template"),
   comparisonUnit: document.querySelector("#comparison-unit"),
+  targetAmount: document.querySelector("#target-amount"),
+  targetUnit: document.querySelector("#target-unit"),
   familyWarning: document.querySelector("#family-warning"),
   summaryEmpty: document.querySelector("#summary-empty"),
   summaryContent: document.querySelector("#summary-content"),
   winnerName: document.querySelector("#winner-name"),
   winnerPriceLine: document.querySelector("#winner-price-line"),
   winnerContext: document.querySelector("#winner-context"),
+  tripCard: document.querySelector("#trip-card"),
+  tripWinnerName: document.querySelector("#trip-winner-name"),
+  tripPriceLine: document.querySelector("#trip-price-line"),
+  tripContext: document.querySelector("#trip-context"),
   rankingList: document.querySelector("#ranking-list"),
   loadSample: document.querySelector("#load-sample"),
   copyLink: document.querySelector("#copy-link"),
@@ -96,6 +99,8 @@ function createEmptyItem(defaultUnit = "oz") {
 function createDefaultState() {
   return {
     comparisonUnit: "oz",
+    targetAmount: "",
+    targetUnit: "oz",
     items: Array.from({ length: ITEM_COUNT }, () => createEmptyItem()),
   };
 }
@@ -119,6 +124,10 @@ function normalizeState(input = {}) {
   normalized.comparisonUnit = UNITS_BY_VALUE[input.comparisonUnit]
     ? input.comparisonUnit
     : normalized.items[0].unit;
+  normalized.targetAmount = stringifyField(input.targetAmount);
+  normalized.targetUnit = UNITS_BY_VALUE[input.targetUnit]
+    ? input.targetUnit
+    : normalized.comparisonUnit;
   return normalized;
 }
 
@@ -184,6 +193,8 @@ function applyStateToForm() {
     card.querySelector(".pack-count").value = item.packCount || "1";
     card.querySelector(".coupon").value = item.coupon;
   });
+
+  elements.targetAmount.value = state.targetAmount;
 }
 
 function bindEvents() {
@@ -192,6 +203,16 @@ function bindEvents() {
 
   elements.comparisonUnit.addEventListener("change", (event) => {
     state.comparisonUnit = event.target.value;
+    update();
+  });
+
+  elements.targetAmount.addEventListener("input", (event) => {
+    state.targetAmount = event.target.value;
+    update();
+  });
+
+  elements.targetUnit.addEventListener("change", (event) => {
+    state.targetUnit = event.target.value;
     update();
   });
 
@@ -243,7 +264,10 @@ function update() {
     .filter(({ item }) => isCompleteItem(item));
 
   const activeFamily = syncComparisonUnitOptions(completeItems);
+  syncTargetUnitOptions(activeFamily);
+
   const comparisonUnitMeta = UNITS_BY_VALUE[state.comparisonUnit];
+  const targetPlan = getTargetPlan(activeFamily);
 
   const evaluated = state.items.map((item, index) => ({
     index,
@@ -251,19 +275,23 @@ function update() {
     metrics: evaluateItem(item, state.comparisonUnit),
   }));
 
-  const comparableItems = evaluated.filter(
-    ({ metrics }) => metrics.complete && metrics.sameFamily,
-  );
-  comparableItems.sort((a, b) => a.metrics.unitPrice - b.metrics.unitPrice);
+  const comparableItems = evaluated
+    .filter(({ metrics }) => metrics.complete && metrics.sameFamily)
+    .sort((a, b) => a.metrics.unitPrice - b.metrics.unitPrice);
 
   const winner = comparableItems[0] ?? null;
+  const entries = comparableItems.map((entry) => ({
+    ...entry,
+    tripPlan: targetPlan ? buildTripPlan(entry.metrics, targetPlan) : null,
+  }));
+  const tripWinner = targetPlan ? getTripWinner(entries) : null;
   const excludedCount = evaluated.filter(
     ({ metrics }) => metrics.complete && !metrics.sameFamily,
   ).length;
 
   updateFamilyWarning(activeFamily, excludedCount);
-  updateCards(evaluated, winner, comparisonUnitMeta);
-  updateSummary(comparableItems, winner, comparisonUnitMeta, excludedCount);
+  updateCards(evaluated, winner, comparisonUnitMeta, targetPlan, tripWinner);
+  updateSummary(entries, winner, comparisonUnitMeta, excludedCount, targetPlan, tripWinner);
   persistState();
   syncHash();
 }
@@ -299,6 +327,36 @@ function syncComparisonUnitOptions(completeItems) {
   elements.comparisonUnit.value = state.comparisonUnit;
 
   return activeFamily;
+}
+
+function syncTargetUnitOptions(activeFamily) {
+  const allowedUnits = UNITS.filter((unit) => unit.family === activeFamily);
+
+  if (!allowedUnits.some((unit) => unit.value === state.targetUnit)) {
+    state.targetUnit = allowedUnits.some((unit) => unit.value === state.comparisonUnit)
+      ? state.comparisonUnit
+      : DEFAULT_UNIT_BY_FAMILY[activeFamily];
+  }
+
+  elements.targetUnit.innerHTML = allowedUnits
+    .map((unit) => `<option value="${unit.value}">${unit.label}</option>`)
+    .join("");
+  elements.targetUnit.value = state.targetUnit;
+}
+
+function getTargetPlan(activeFamily) {
+  const amount = toPositiveNumber(state.targetAmount);
+  const unitMeta = UNITS_BY_VALUE[state.targetUnit];
+
+  if (!(amount > 0) || !unitMeta || unitMeta.family !== activeFamily) {
+    return null;
+  }
+
+  return {
+    amount,
+    unitMeta,
+    baseAmount: amount * unitMeta.factor,
+  };
 }
 
 function evaluateItem(item, comparisonUnitValue) {
@@ -342,7 +400,33 @@ function evaluateItem(item, comparisonUnitValue) {
   };
 }
 
-function updateCards(evaluated, winner, comparisonUnitMeta) {
+function buildTripPlan(metrics, targetPlan) {
+  const purchases = Math.max(1, Math.ceil(targetPlan.baseAmount / metrics.totalBaseAmount));
+  const purchasedBaseAmount = purchases * metrics.totalBaseAmount;
+
+  return {
+    purchases,
+    tripCost: purchases * metrics.effectivePrice,
+    purchasedAmount: purchasedBaseAmount / targetPlan.unitMeta.factor,
+    surplusAmount: (purchasedBaseAmount - targetPlan.baseAmount) / targetPlan.unitMeta.factor,
+  };
+}
+
+function getTripWinner(entries) {
+  const ranked = entries
+    .filter((entry) => entry.tripPlan)
+    .sort((a, b) => {
+      return (
+        a.tripPlan.tripCost - b.tripPlan.tripCost ||
+        a.tripPlan.surplusAmount - b.tripPlan.surplusAmount ||
+        a.metrics.unitPrice - b.metrics.unitPrice
+      );
+    });
+
+  return ranked[0] ?? null;
+}
+
+function updateCards(evaluated, winner, comparisonUnitMeta, targetPlan, tripWinner) {
   evaluated.forEach(({ index, item, metrics }) => {
     const card = getCard(index);
     if (!card) return;
@@ -352,13 +436,18 @@ function updateCards(evaluated, winner, comparisonUnitMeta) {
     const unitPriceEl = card.querySelector(".unit-price");
     const matchPriceEl = card.querySelector(".match-price");
     const noteEl = card.querySelector(".metric-note");
+    const tripMetric = card.querySelector(".trip-metric");
+    const tripCostEl = card.querySelector(".trip-cost");
 
     card.classList.toggle("is-winner", winner?.index === index);
+    card.classList.toggle("is-trip-winner", Boolean(targetPlan && tripWinner?.index === index));
 
     if (!metrics.complete) {
       effectiveEl.textContent = "—";
       unitPriceEl.textContent = "—";
       matchPriceEl.textContent = "—";
+      tripCostEl.textContent = "—";
+      tripMetric.classList.add("hidden");
       noteEl.textContent = "Fill in price, size, and unit to compare.";
       return;
     }
@@ -368,6 +457,8 @@ function updateCards(evaluated, winner, comparisonUnitMeta) {
     if (!metrics.sameFamily) {
       unitPriceEl.textContent = "Excluded";
       matchPriceEl.textContent = "—";
+      tripCostEl.textContent = "—";
+      tripMetric.classList.add("hidden");
       noteEl.textContent = `${capitalize(metrics.unitMeta.family)} item. Switch units or remove mismatched entries to compare it.`;
       return;
     }
@@ -380,16 +471,33 @@ function updateCards(evaluated, winner, comparisonUnitMeta) {
 
     matchPriceEl.textContent = winner?.index === index ? "Already best" : formatMoney(matchPrice);
 
-    const totalAmountLine = `${numberFormatter.format(metrics.totalComparisonAmount)} ${comparisonUnitMeta.shortLabel}`;
-    if (winner?.index === index) {
-      noteEl.textContent = `${label} is the current best value. Total amount: ${totalAmountLine}.`;
+    const totalAmountLine = `${formatNumber(metrics.totalComparisonAmount)} ${comparisonUnitMeta.shortLabel}`;
+    let noteText =
+      winner?.index === index
+        ? `${label} is the current best unit-price value. Total amount: ${totalAmountLine}.`
+        : `Total amount: ${totalAmountLine}. Needs to drop to ${formatMoney(matchPrice)} to tie the unit-price winner.`;
+
+    if (targetPlan) {
+      const tripPlan = buildTripPlan(metrics, targetPlan);
+      const targetLabel = formatMeasurement(targetPlan.amount, targetPlan.unitMeta.shortLabel);
+      const surplusLabel = formatMeasurement(tripPlan.surplusAmount, targetPlan.unitMeta.shortLabel);
+
+      tripMetric.classList.remove("hidden");
+      tripCostEl.textContent = formatMoney(tripPlan.tripCost);
+      noteText +=
+        tripWinner?.index === index
+          ? ` Cheapest way to reach ${targetLabel}: buy ${tripPlan.purchases} of this option for ${formatMoney(tripPlan.tripCost)}. Extra after target: ${surplusLabel}.`
+          : ` To reach ${targetLabel}, buy ${tripPlan.purchases} of this option for ${formatMoney(tripPlan.tripCost)}. Extra after target: ${surplusLabel}.`;
     } else {
-      noteEl.textContent = `Total amount: ${totalAmountLine}. Needs to drop to ${formatMoney(matchPrice)} to tie the winner.`;
+      tripCostEl.textContent = "—";
+      tripMetric.classList.add("hidden");
     }
+
+    noteEl.textContent = noteText;
   });
 }
 
-function updateSummary(comparableItems, winner, comparisonUnitMeta, excludedCount) {
+function updateSummary(entries, winner, comparisonUnitMeta, excludedCount, targetPlan, tripWinner) {
   if (!winner) {
     elements.summaryEmpty.classList.remove("hidden");
     elements.summaryContent.classList.add("hidden");
@@ -397,6 +505,7 @@ function updateSummary(comparableItems, winner, comparisonUnitMeta, excludedCoun
       ? "You have complete items, but they do not share the same measurement family yet."
       : "Add at least one complete item to see the ranking.";
     elements.rankingList.innerHTML = "";
+    elements.tripCard.classList.add("hidden");
     return;
   }
 
@@ -406,17 +515,40 @@ function updateSummary(comparableItems, winner, comparisonUnitMeta, excludedCoun
   const winnerName = winner.item.name.trim() || `Option ${winner.index + 1}`;
   elements.winnerName.textContent = winnerName;
   elements.winnerPriceLine.textContent = `${formatMoney(winner.metrics.unitPrice)} per ${comparisonUnitMeta.shortLabel}`;
-  elements.winnerContext.textContent = buildWinnerContext(comparableItems.length, excludedCount);
+  elements.winnerContext.textContent = buildWinnerContext(entries.length, excludedCount);
 
-  elements.rankingList.innerHTML = comparableItems
+  if (targetPlan && tripWinner?.tripPlan) {
+    const tripWinnerName = tripWinner.item.name.trim() || `Option ${tripWinner.index + 1}`;
+    const targetLabel = formatMeasurement(targetPlan.amount, targetPlan.unitMeta.shortLabel);
+    const surplusLabel = formatMeasurement(tripWinner.tripPlan.surplusAmount, targetPlan.unitMeta.shortLabel);
+
+    elements.tripCard.classList.remove("hidden");
+    elements.tripWinnerName.textContent = tripWinnerName;
+    elements.tripPriceLine.textContent = `${formatMoney(tripWinner.tripPlan.tripCost)} total to reach ${targetLabel}`;
+    elements.tripContext.textContent = `Buy ${tripWinner.tripPlan.purchases} of this option. Extra after target: ${surplusLabel}.`;
+  } else {
+    elements.tripCard.classList.add("hidden");
+  }
+
+  const targetLabel = targetPlan
+    ? formatMeasurement(targetPlan.amount, targetPlan.unitMeta.shortLabel)
+    : "";
+
+  elements.rankingList.innerHTML = entries
     .map((entry, rank) => {
       const name = entry.item.name.trim() || `Option ${entry.index + 1}`;
       const comparisonCost = winner.metrics.unitPrice * entry.metrics.totalComparisonAmount;
       const extraCost = Math.max(0, entry.metrics.effectivePrice - comparisonCost);
-      const metaLine =
+      const unitMetaLine =
         rank === 0
-          ? "Best value right now."
-          : `${formatMoney(extraCost)} more than the winner for the same amount. Match price: ${formatMoney(comparisonCost)}.`;
+          ? "Best unit price right now."
+          : `${formatMoney(extraCost)} more than the unit-price winner for the same amount. Match price: ${formatMoney(comparisonCost)}.`;
+
+      const tripMetaLine = targetPlan && entry.tripPlan && tripWinner?.tripPlan
+        ? entry.index === tripWinner.index
+          ? ` Cheapest checkout total for ${targetLabel}. ${entry.tripPlan.purchases} × entered option, ${formatMeasurement(entry.tripPlan.surplusAmount, targetPlan.unitMeta.shortLabel)} extra.`
+          : ` ${formatMoney(entry.tripPlan.tripCost - tripWinner.tripPlan.tripCost)} more than the target winner to reach ${targetLabel}. Checkout: ${formatMoney(entry.tripPlan.tripCost)} (${entry.tripPlan.purchases} × entered option, ${formatMeasurement(entry.tripPlan.surplusAmount, targetPlan.unitMeta.shortLabel)} extra).`
+        : "";
 
       return `
         <li>
@@ -427,7 +559,7 @@ function updateSummary(comparableItems, winner, comparisonUnitMeta, excludedCoun
             </div>
             <span class="ranking-price">${formatMoney(entry.metrics.unitPrice)} / ${comparisonUnitMeta.shortLabel}</span>
           </div>
-          <small>${metaLine}</small>
+          <small>${unitMetaLine}${tripMetaLine}</small>
         </li>
       `;
     })
@@ -471,6 +603,20 @@ function formatMoney(value) {
   }).format(value);
 }
 
+function formatNumber(value) {
+  if (!Number.isFinite(value)) return "—";
+  const abs = Math.abs(value);
+  const maximumFractionDigits = abs >= 10 ? 1 : abs >= 1 ? 2 : 3;
+  return new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits,
+  }).format(value);
+}
+
+function formatMeasurement(value, unitLabel) {
+  return `${formatNumber(value)} ${unitLabel}`;
+}
+
 function toPositiveNumber(value) {
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
@@ -494,9 +640,11 @@ function encodeStateForHash() {
 }
 
 function syncHash() {
-  const hasMeaningfulInput = state.items.some((item) => {
-    return [item.name, item.price, item.size, item.coupon].some((value) => String(value).trim() !== "");
-  });
+  const hasMeaningfulInput =
+    String(state.targetAmount).trim() !== "" ||
+    state.items.some((item) => {
+      return [item.name, item.price, item.size, item.coupon].some((value) => String(value).trim() !== "");
+    });
 
   const nextUrl = hasMeaningfulInput
     ? `${window.location.pathname}#${encodeStateForHash()}`
