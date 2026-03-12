@@ -115,17 +115,54 @@
   <body>
     <div class="app-shell">
       <header class="hero panel">
-        <p class="eyebrow">Static tool · no sign-in · phone-friendly</p>
-        <h1>Unit Price Checker</h1>
-        <p class="hero-copy">
-          Compare groceries, drinks, and household items by actual cost per unit.
-          Great for the classic store aisle question: <em>is the giant one genuinely a better deal, or is the shelf tag lying to me again?</em>
-        </p>
+        <div class="hero-grid">
+          <div class="hero-copy-block">
+            <p class="eyebrow">Static tool · no sign-in · phone-friendly</p>
+            <h1>Unit Price Checker</h1>
+            <p class="hero-copy">
+              Compare groceries, drinks, and household items by actual cost per unit.
+              Great for the classic store aisle question: <em>is the giant one genuinely a better deal, or is the shelf tag lying to me again?</em>
+            </p>
 
-        <div class="hero-actions">
-          <button id="load-sample" class="button primary" type="button">Load example</button>
-          <button id="copy-link" class="button secondary" type="button">Copy share link</button>
-          <button id="reset-form" class="button ghost" type="button">Reset</button>
+            <div class="hero-actions">
+              <button id="load-sample" class="button primary" type="button">Load example</button>
+              <button id="copy-link" class="button secondary" type="button">Copy share link</button>
+              <button id="reset-form" class="button ghost" type="button">Reset</button>
+            </div>
+
+            <div class="hero-ribbon" aria-label="Why people keep this around">
+              <span>✨ catches fake deals</span>
+              <span>🧾 keeps the math plain</span>
+              <span>🛒 built for actual aisle arguments</span>
+            </div>
+          </div>
+
+          <aside class="hero-art" aria-label="Decorative aisle math illustration">
+            <div class="hero-art-card hero-art-main">
+              <p class="hero-art-kicker">Aisle mood</p>
+              <div class="shelf-doodle" aria-hidden="true">
+                <span class="shelf-item shelf-item-carton"></span>
+                <span class="shelf-item shelf-item-can"></span>
+                <span class="shelf-item shelf-item-bag"></span>
+                <span class="spark spark-1"></span>
+                <span class="spark spark-2"></span>
+                <span class="spark spark-3"></span>
+              </div>
+              <p class="hero-art-quote">Tiny receipt goblin energy, but for useful math.</p>
+            </div>
+            <div class="hero-art-stack" aria-hidden="true">
+              <div class="hero-art-card stat-card price-card">
+                <span class="stat-card-label">Best unit price</span>
+                <strong>$0.13 / oz</strong>
+                <span>Name brand wins the ounce fight</span>
+              </div>
+              <div class="hero-art-card stat-card trip-card-preview">
+                <span class="stat-card-label">Cheapest checkout</span>
+                <strong>$4.29 now</strong>
+                <span>Smaller box wins the actual trip</span>
+              </div>
+            </div>
+          </aside>
         </div>
 
         <div class="starter-presets" aria-labelledby="starter-presets-heading">
@@ -244,6 +281,12 @@
               <h3 id="trip-winner-name">—</h3>
               <p id="trip-price-line" class="winner-price-line"></p>
               <p id="trip-context" class="winner-context"></p>
+            </div>
+
+            <div id="winner-split-explainer" class="winner-split-explainer hidden" aria-live="polite">
+              <p class="winner-label">Why the answer splits</p>
+              <h3 id="winner-split-heading">The best unit price is not the cheapest checkout today.</h3>
+              <p id="winner-split-body" class="winner-context"></p>
             </div>
 
             <ol id="ranking-list" class="ranking-list"></ol>

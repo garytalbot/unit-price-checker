@@ -275,6 +275,9 @@ const elements = {
   tripWinnerName: document.querySelector("#trip-winner-name"),
   tripPriceLine: document.querySelector("#trip-price-line"),
   tripContext: document.querySelector("#trip-context"),
+  winnerSplitExplainer: document.querySelector("#winner-split-explainer"),
+  winnerSplitHeading: document.querySelector("#winner-split-heading"),
+  winnerSplitBody: document.querySelector("#winner-split-body"),
   rankingList: document.querySelector("#ranking-list"),
   shareBundle: document.querySelector("#share-bundle"),
   shareBundleText: document.querySelector("#share-bundle-text"),
@@ -931,6 +934,7 @@ function updateSummary(entries, winner, comparisonUnitMeta, excludedCount, targe
       : "Add at least one complete item to see the ranking.";
     elements.rankingList.innerHTML = "";
     elements.tripCard.classList.add("hidden");
+    elements.winnerSplitExplainer.classList.add("hidden");
     return;
   }
 
@@ -954,6 +958,8 @@ function updateSummary(entries, winner, comparisonUnitMeta, excludedCount, targe
   } else {
     elements.tripCard.classList.add("hidden");
   }
+
+  updateWinnerSplitExplainer(winner, tripWinner, comparisonUnitMeta, targetPlan);
 
   const targetLabel = targetPlan
     ? formatMeasurement(targetPlan.amount, targetPlan.unitMeta.shortLabel)
@@ -990,6 +996,25 @@ function updateSummary(entries, winner, comparisonUnitMeta, excludedCount, targe
       `;
     })
     .join("");
+}
+
+function updateWinnerSplitExplainer(winner, tripWinner, comparisonUnitMeta, targetPlan) {
+  if (!winner || !tripWinner?.tripPlan || !targetPlan || tripWinner.index === winner.index) {
+    elements.winnerSplitExplainer.classList.add("hidden");
+    return;
+  }
+
+  const winnerName = winner.item.name.trim() || `Option ${winner.index + 1}`;
+  const tripWinnerName = tripWinner.item.name.trim() || `Option ${tripWinner.index + 1}`;
+  const targetLabel = formatMeasurement(targetPlan.amount, targetPlan.unitMeta.shortLabel);
+  const unitWinnerTripPlan = winner.tripPlan || buildTripPlan(winner.metrics, targetPlan);
+  const tripSavings = Math.max(0, unitWinnerTripPlan.tripCost - tripWinner.tripPlan.tripCost);
+  const unitWinnerExtra = formatMeasurement(unitWinnerTripPlan.surplusAmount, targetPlan.unitMeta.shortLabel);
+  const checkoutWinnerExtra = formatMeasurement(tripWinner.tripPlan.surplusAmount, targetPlan.unitMeta.shortLabel);
+
+  elements.winnerSplitHeading.textContent = `${winnerName} wins on ${comparisonUnitMeta.shortLabel}. ${tripWinnerName} wins at the register.`;
+  elements.winnerSplitBody.textContent = `To get ${targetLabel}, ${tripWinnerName} costs ${formatMoney(tripWinner.tripPlan.tripCost)} at checkout (${tripWinner.tripPlan.purchases} package${tripWinner.tripPlan.purchases === 1 ? "" : "s"}, ${checkoutWinnerExtra} extra). ${winnerName} has the better unit price, but buying enough of it costs ${formatMoney(unitWinnerTripPlan.tripCost)} today (${unitWinnerTripPlan.purchases} package${unitWinnerTripPlan.purchases === 1 ? "" : "s"}, ${unitWinnerExtra} extra) — ${formatMoney(tripSavings)} more for this trip.`;
+  elements.winnerSplitExplainer.classList.remove("hidden");
 }
 
 function updateShareBundle(winner, comparisonUnitMeta, targetPlan, tripWinner, suspiciousShelfEntries) {
