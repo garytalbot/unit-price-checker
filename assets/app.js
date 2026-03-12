@@ -3,6 +3,26 @@ const ITEM_COUNT = 3;
 const SHELF_TAG_TOLERANCE_PERCENT = 0.02;
 const SHELF_TAG_TOLERANCE_ABSOLUTE = 0.005;
 const DEFAULT_SHARE_BUNDLE_STATUS = "Updates automatically as you type.";
+const TARGET_PRESETS_BY_FAMILY = {
+  weight: [
+    { amount: 16, unit: "oz", label: "16 oz" },
+    { amount: 32, unit: "oz", label: "32 oz" },
+    { amount: 64, unit: "oz", label: "64 oz" },
+    { amount: 5, unit: "lb", label: "5 lb" },
+  ],
+  volume: [
+    { amount: 12, unit: "floz", label: "12 fl oz" },
+    { amount: 32, unit: "floz", label: "32 fl oz" },
+    { amount: 64, unit: "floz", label: "64 fl oz" },
+    { amount: 1, unit: "gal", label: "1 gal" },
+  ],
+  count: [
+    { amount: 6, unit: "each", label: "6 count" },
+    { amount: 12, unit: "each", label: "12 count" },
+    { amount: 24, unit: "each", label: "24 count" },
+    { amount: 1, unit: "dozen", label: "1 dozen" },
+  ],
+};
 
 const UNITS = [
   { value: "g", label: "grams (g)", shortLabel: "g", family: "weight", factor: 1 },
@@ -71,6 +91,7 @@ const elements = {
   comparisonUnit: document.querySelector("#comparison-unit"),
   targetAmount: document.querySelector("#target-amount"),
   targetUnit: document.querySelector("#target-unit"),
+  targetPresets: document.querySelector("#target-presets"),
   familyWarning: document.querySelector("#family-warning"),
   shelfAuditNotice: document.querySelector("#shelf-audit-notice"),
   summaryEmpty: document.querySelector("#summary-empty"),
@@ -244,6 +265,16 @@ function bindEvents() {
     update();
   });
 
+  elements.targetPresets.addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-amount][data-unit]");
+    if (!button) return;
+
+    state.targetAmount = button.dataset.amount || "";
+    state.targetUnit = button.dataset.unit || state.targetUnit;
+    elements.targetAmount.value = state.targetAmount;
+    update();
+  });
+
   elements.loadSample.addEventListener("click", () => {
     state = normalizeState(SAMPLE_STATE);
     applyStateToForm();
@@ -352,6 +383,7 @@ function update() {
 
   const activeFamily = syncComparisonUnitOptions(completeItems);
   syncTargetUnitOptions(activeFamily);
+  renderTargetPresets(activeFamily);
 
   const comparisonUnitMeta = UNITS_BY_VALUE[state.comparisonUnit];
   const targetPlan = getTargetPlan(activeFamily);
@@ -435,6 +467,20 @@ function syncTargetUnitOptions(activeFamily) {
     .map((unit) => `<option value="${unit.value}">${unit.label}</option>`)
     .join("");
   elements.targetUnit.value = state.targetUnit;
+}
+
+function renderTargetPresets(activeFamily) {
+  if (!elements.targetPresets) return;
+
+  const presets = TARGET_PRESETS_BY_FAMILY[activeFamily] || [];
+  elements.targetPresets.innerHTML = presets
+    .map((preset) => {
+      const isActive =
+        String(state.targetAmount).trim() === String(preset.amount) && state.targetUnit === preset.unit;
+
+      return `<button class="target-preset${isActive ? " is-active" : ""}" type="button" data-amount="${preset.amount}" data-unit="${preset.unit}">${preset.label}</button>`;
+    })
+    .join("");
 }
 
 function syncShelfTagUnitSelect(card, item) {
