@@ -293,7 +293,6 @@ let currentShareBundleText = "";
 let copyVerdictResetTimer = 0;
 
 renderCards();
-renderStarterPresets();
 applyStateToForm();
 bindEvents();
 update();
@@ -572,6 +571,7 @@ function update() {
   const activeFamily = syncComparisonUnitOptions(completeItems);
   syncTargetUnitOptions(activeFamily);
   renderTargetPresets(activeFamily);
+  renderStarterPresets();
 
   const comparisonUnitMeta = UNITS_BY_VALUE[state.comparisonUnit];
   const targetPlan = getTargetPlan(activeFamily);
@@ -612,14 +612,91 @@ function update() {
 function renderStarterPresets() {
   if (!elements.starterPresets) return;
 
+  const activeStateSignature = JSON.stringify(normalizeState(state));
+
   elements.starterPresets.innerHTML = STARTER_PRESETS.map((preset) => {
+    const preview = buildStarterPresetPreview(preset);
+    const isActive = JSON.stringify(normalizeState(preset.state)) === activeStateSignature;
+
     return `
-      <button class="starter-preset" type="button" data-preset-id="${preset.id}">
-        <span class="starter-preset-label">${escapeHtml(preset.label)}</span>
+      <button class="starter-preset${isActive ? " is-active" : ""}" type="button" data-preset-id="${preset.id}">
+        <span class="starter-preset-topline">
+          <span class="starter-preset-label">${escapeHtml(preset.label)}</span>
+          <span class="starter-preset-meta">
+            <span class="starter-preset-pill">${escapeHtml(preview.familyLabel)}</span>
+            <span class="starter-preset-pill starter-preset-pill-alt">${escapeHtml(preview.outcomeLabel)}</span>
+          </span>
+        </span>
         <span class="starter-preset-description">${escapeHtml(preset.description)}</span>
+        <span class="starter-preset-preview">${escapeHtml(preview.previewLine)}</span>
       </button>
     `;
   }).join("");
+}
+
+function buildStarterPresetPreview(preset) {
+  const presetState = normalizeState(preset.state);
+  const completeItems = presetState.items
+    .map((item, index) => ({ item, index }))
+    .filter(({ item }) => isCompleteItem(item));
+
+  const selectedUnitMeta = UNITS_BY_VALUE[presetState.comparisonUnit];
+  const activeFamily =
+    completeItems.find(({ item }) => UNITS_BY_VALUE[item.unit]?.family === selectedUnitMeta?.family)
+      ? selectedUnitMeta?.family
+      : UNITS_BY_VALUE[completeItems[0]?.item.unit]?.family || selectedUnitMeta?.family || "weight";
+
+  const comparisonUnit = UNITS_BY_VALUE[presetState.comparisonUnit]?.family === activeFamily
+    ? presetState.comparisonUnit
+    : DEFAULT_UNIT_BY_FAMILY[activeFamily];
+  const comparisonMeta = UNITS_BY_VALUE[comparisonUnit];
+
+  const evaluated = presetState.items
+    .map((item, index) => ({ item, index, metrics: evaluateItem(item, comparisonUnit) }))
+    .filter(({ metrics }) => metrics.complete && metrics.sameFamily)
+    .sort((a, b) => a.metrics.unitPrice - b.metrics.unitPrice);
+
+  const winner = evaluated[0] ?? null;
+  const targetAmount = toPositiveNumber(presetState.targetAmount);
+  const targetUnitMeta = UNITS_BY_VALUE[presetState.targetUnit];
+  const targetPlan =
+    targetAmount > 0 && targetUnitMeta?.family === activeFamily
+      ? { amount: targetAmount, unitMeta: targetUnitMeta, baseAmount: targetAmount * targetUnitMeta.factor }
+      : null;
+  const entries = evaluated.map((entry) => ({
+    ...entry,
+    tripPlan: targetPlan ? buildTripPlan(entry.metrics, targetPlan) : null,
+  }));
+  const tripWinner = targetPlan ? getTripWinner(entries) : null;
+
+  const familyLabelMap = {
+    weight: "weight",
+    volume: "volume",
+    count: "count",
+  };
+
+  const winnerName = winner ? winner.item.name.trim() || `Option ${winner.index + 1}` : "No winner yet";
+  const tripWinnerName = tripWinner ? tripWinner.item.name.trim() || `Option ${tripWinner.index + 1}` : winnerName;
+  const outcomeLabel =
+    targetPlan && tripWinner && winner && tripWinner.index !== winner.index
+      ? "split winner"
+      : targetPlan
+        ? "same winner"
+        : "unit-price demo";
+
+  const previewLine =
+    targetPlan && tripWinner && winner && tripWinner.index !== winner.index
+      ? `Unit: ${winnerName} · Checkout: ${tripWinnerName}`
+      : targetPlan && tripWinner
+        ? `${tripWinnerName} wins both the aisle math and the trip total.`
+        : `${winnerName} is the unit-price winner.`;
+
+  return {
+    familyLabel: familyLabelMap[activeFamily] || activeFamily,
+    outcomeLabel,
+    previewLine,
+    comparisonMeta,
+  };
 }
 
 function syncComparisonUnitOptions(completeItems) {

@@ -384,14 +384,59 @@ h3 {
   box-shadow: 0 14px 28px rgba(8, 15, 29, 0.28);
 }
 
+.starter-preset-topline {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.65rem;
+}
+
 .starter-preset-label {
   font-weight: 700;
+}
+
+.starter-preset-meta {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.35rem;
+}
+
+.starter-preset-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.26rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(167, 139, 250, 0.14);
+  border: 1px solid rgba(196, 181, 253, 0.18);
+  color: #ddd6fe;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.starter-preset-pill-alt {
+  background: rgba(244, 114, 182, 0.12);
+  border-color: rgba(244, 114, 182, 0.2);
+  color: #fbcfe8;
 }
 
 .starter-preset-description {
   color: var(--muted);
   font-size: 0.92rem;
   line-height: 1.4;
+}
+
+.starter-preset-preview {
+  color: var(--text);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.starter-preset.is-active {
+  border-color: rgba(236, 72, 153, 0.42);
+  box-shadow: 0 0 0 1px rgba(236, 72, 153, 0.14), 0 16px 32px rgba(20, 11, 36, 0.32);
 }
 
 .button {
