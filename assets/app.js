@@ -1,5 +1,7 @@
 const STORAGE_KEY = "unit-price-checker-state-v1";
 const ITEM_COUNT = 3;
+const SHELF_TAG_TOLERANCE_PERCENT = 0.02;
+const SHELF_TAG_TOLERANCE_ABSOLUTE = 0.005;
 
 const UNITS = [
   { value: "g", label: "grams (g)", shortLabel: "g", family: "weight", factor: 1 },
@@ -36,6 +38,8 @@ const SAMPLE_STATE = {
       unit: "oz",
       packCount: "1",
       coupon: "0",
+      shelfTagPrice: "0.15",
+      shelfTagUnit: "oz",
     },
     {
       name: "Name brand oats",
@@ -44,6 +48,8 @@ const SAMPLE_STATE = {
       unit: "oz",
       packCount: "1",
       coupon: "1.00",
+      shelfTagPrice: "0.13",
+      shelfTagUnit: "oz",
     },
     {
       name: "Warehouse pack",
@@ -52,6 +58,8 @@ const SAMPLE_STATE = {
       unit: "lb",
       packCount: "1",
       coupon: "0",
+      shelfTagPrice: "0.25",
+      shelfTagUnit: "oz",
     },
   ],
 };
@@ -63,6 +71,7 @@ const elements = {
   targetAmount: document.querySelector("#target-amount"),
   targetUnit: document.querySelector("#target-unit"),
   familyWarning: document.querySelector("#family-warning"),
+  shelfAuditNotice: document.querySelector("#shelf-audit-notice"),
   summaryEmpty: document.querySelector("#summary-empty"),
   summaryContent: document.querySelector("#summary-content"),
   winnerName: document.querySelector("#winner-name"),
@@ -93,6 +102,8 @@ function createEmptyItem(defaultUnit = "oz") {
     unit: defaultUnit,
     packCount: "1",
     coupon: "",
+    shelfTagPrice: "",
+    shelfTagUnit: defaultUnit,
   };
 }
 
@@ -107,6 +118,12 @@ function createDefaultState() {
 
 function normalizeItem(item = {}) {
   const unit = UNITS_BY_VALUE[item.unit] ? item.unit : "oz";
+  const shelfTagUnitCandidate = UNITS_BY_VALUE[item.shelfTagUnit] ? item.shelfTagUnit : unit;
+  const shelfTagUnit =
+    UNITS_BY_VALUE[shelfTagUnitCandidate]?.family === UNITS_BY_VALUE[unit]?.family
+      ? shelfTagUnitCandidate
+      : unit;
+
   return {
     name: String(item.name ?? "").slice(0, 60),
     price: stringifyField(item.price),
@@ -114,6 +131,8 @@ function normalizeItem(item = {}) {
     unit,
     packCount: stringifyField(item.packCount || "1") || "1",
     coupon: stringifyField(item.coupon),
+    shelfTagPrice: stringifyField(item.shelfTagPrice),
+    shelfTagUnit,
   };
 }
 
@@ -192,6 +211,8 @@ function applyStateToForm() {
     card.querySelector(".unit").value = item.unit;
     card.querySelector(".pack-count").value = item.packCount || "1";
     card.querySelector(".coupon").value = item.coupon;
+    card.querySelector(".shelf-tag-price").value = item.shelfTagPrice;
+    syncShelfTagUnitSelect(card, item);
   });
 
   elements.targetAmount.value = state.targetAmount;
@@ -255,6 +276,11 @@ function handleCardInput(event) {
 
   const index = Number(card.dataset.index);
   state.items[index][field] = event.target.value;
+
+  if (field === "unit") {
+    syncShelfTagUnitSelect(card, state.items[index]);
+  }
+
   update();
 }
 
@@ -288,8 +314,13 @@ function update() {
   const excludedCount = evaluated.filter(
     ({ metrics }) => metrics.complete && !metrics.sameFamily,
   ).length;
+  const shelfAudits = evaluated.filter(({ metrics }) => metrics.complete && metrics.shelfTagAudit);
+  const suspiciousShelfAudits = shelfAudits.filter(
+    ({ metrics }) => metrics.shelfTagAudit.status !== "close",
+  ).length;
 
   updateFamilyWarning(activeFamily, excludedCount);
+  updateShelfAuditNotice(shelfAudits.length, suspiciousShelfAudits);
   updateCards(evaluated, winner, comparisonUnitMeta, targetPlan, tripWinner);
   updateSummary(entries, winner, comparisonUnitMeta, excludedCount, targetPlan, tripWinner);
   persistState();
@@ -344,6 +375,21 @@ function syncTargetUnitOptions(activeFamily) {
   elements.targetUnit.value = state.targetUnit;
 }
 
+function syncShelfTagUnitSelect(card, item) {
+  const shelfTagUnitSelect = card.querySelector(".shelf-tag-unit");
+  const itemUnitMeta = UNITS_BY_VALUE[item.unit] || UNITS_BY_VALUE.oz;
+  const allowedUnits = UNITS.filter((unit) => unit.family === itemUnitMeta.family);
+
+  if (!allowedUnits.some((unit) => unit.value === item.shelfTagUnit)) {
+    item.shelfTagUnit = item.unit;
+  }
+
+  shelfTagUnitSelect.innerHTML = allowedUnits
+    .map((unit) => `<option value="${unit.value}">${unit.label}</option>`)
+    .join("");
+  shelfTagUnitSelect.value = item.shelfTagUnit;
+}
+
 function getTargetPlan(activeFamily) {
   const amount = toPositiveNumber(state.targetAmount);
   const unitMeta = UNITS_BY_VALUE[state.targetUnit];
@@ -374,6 +420,7 @@ function evaluateItem(item, comparisonUnitValue) {
   const effectivePrice = Math.max(0, price - coupon);
   const totalBaseAmount = size * packCount * unitMeta.factor;
   const sameFamily = comparisonMeta?.family === unitMeta.family;
+  const shelfTagAudit = buildShelfTagAudit(item, effectivePrice, totalBaseAmount, unitMeta);
 
   if (!sameFamily) {
     return {
@@ -382,6 +429,7 @@ function evaluateItem(item, comparisonUnitValue) {
       effectivePrice,
       totalBaseAmount,
       unitMeta,
+      shelfTagAudit,
     };
   }
 
@@ -397,6 +445,44 @@ function evaluateItem(item, comparisonUnitValue) {
     unitPrice,
     unitMeta,
     comparisonMeta,
+    shelfTagAudit,
+  };
+}
+
+function buildShelfTagAudit(item, effectivePrice, totalBaseAmount, itemUnitMeta) {
+  const claimedUnitPrice = toPositiveNumber(item.shelfTagPrice);
+  const claimedUnitMeta = UNITS_BY_VALUE[item.shelfTagUnit];
+
+  if (!(claimedUnitPrice > 0) || !claimedUnitMeta || claimedUnitMeta.family !== itemUnitMeta.family) {
+    return null;
+  }
+
+  const totalClaimUnits = totalBaseAmount / claimedUnitMeta.factor;
+  const computedUnitPrice = totalClaimUnits > 0 ? effectivePrice / totalClaimUnits : Number.NaN;
+
+  if (!Number.isFinite(computedUnitPrice)) {
+    return null;
+  }
+
+  const difference = claimedUnitPrice - computedUnitPrice;
+  const absoluteDifference = Math.abs(difference);
+  const percentDifference = computedUnitPrice > 0 ? absoluteDifference / computedUnitPrice : 0;
+  const tolerance = Math.max(
+    SHELF_TAG_TOLERANCE_ABSOLUTE,
+    computedUnitPrice * SHELF_TAG_TOLERANCE_PERCENT,
+  );
+  const status =
+    absoluteDifference <= tolerance ? "close" : difference > 0 ? "high" : "low";
+
+  return {
+    status,
+    unitMeta: claimedUnitMeta,
+    claimedUnitPrice,
+    computedUnitPrice,
+    difference,
+    absoluteDifference,
+    percentDifference,
+    tolerance,
   };
 }
 
@@ -449,10 +535,12 @@ function updateCards(evaluated, winner, comparisonUnitMeta, targetPlan, tripWinn
       tripCostEl.textContent = "—";
       tripMetric.classList.add("hidden");
       noteEl.textContent = "Fill in price, size, and unit to compare.";
+      updateShelfTagFeedback(card, null);
       return;
     }
 
     effectiveEl.textContent = formatMoney(metrics.effectivePrice);
+    updateShelfTagFeedback(card, metrics.shelfTagAudit);
 
     if (!metrics.sameFamily) {
       unitPriceEl.textContent = "Excluded";
@@ -495,6 +583,37 @@ function updateCards(evaluated, winner, comparisonUnitMeta, targetPlan, tripWinn
 
     noteEl.textContent = noteText;
   });
+}
+
+function updateShelfTagFeedback(card, audit) {
+  const feedbackEl = card.querySelector(".shelf-tag-feedback");
+  if (!feedbackEl) return;
+
+  feedbackEl.classList.add("hidden");
+  feedbackEl.classList.remove("is-close", "is-warning");
+
+  if (!audit) {
+    feedbackEl.textContent = "";
+    return;
+  }
+
+  const claimLabel = `${formatMoney(audit.claimedUnitPrice)} / ${audit.unitMeta.shortLabel}`;
+  const computedLabel = `${formatMoney(audit.computedUnitPrice)} / ${audit.unitMeta.shortLabel}`;
+  let text = "";
+
+  if (audit.status === "close") {
+    feedbackEl.classList.add("is-close");
+    text = `Shelf tag check: ${claimLabel} looks close to computed ${computedLabel}.`;
+  } else if (audit.status === "high") {
+    feedbackEl.classList.add("is-warning");
+    text = `Shelf tag check: tag says ${claimLabel}, but the entered math lands at ${computedLabel}. That tag reads ${formatMoney(audit.absoluteDifference)} / ${audit.unitMeta.shortLabel} high (${formatPercent(audit.percentDifference)}).`;
+  } else {
+    feedbackEl.classList.add("is-warning");
+    text = `Shelf tag check: tag says ${claimLabel}, but the entered math lands at ${computedLabel}. That tag reads ${formatMoney(audit.absoluteDifference)} / ${audit.unitMeta.shortLabel} low (${formatPercent(audit.percentDifference)}).`;
+  }
+
+  feedbackEl.textContent = text;
+  feedbackEl.classList.remove("hidden");
 }
 
 function updateSummary(entries, winner, comparisonUnitMeta, excludedCount, targetPlan, tripWinner) {
@@ -544,11 +663,12 @@ function updateSummary(entries, winner, comparisonUnitMeta, excludedCount, targe
           ? "Best unit price right now."
           : `${formatMoney(extraCost)} more than the unit-price winner for the same amount. Match price: ${formatMoney(comparisonCost)}.`;
 
-      const tripMetaLine = targetPlan && entry.tripPlan && tripWinner?.tripPlan
-        ? entry.index === tripWinner.index
-          ? ` Cheapest checkout total for ${targetLabel}. ${entry.tripPlan.purchases} × entered option, ${formatMeasurement(entry.tripPlan.surplusAmount, targetPlan.unitMeta.shortLabel)} extra.`
-          : ` ${formatMoney(entry.tripPlan.tripCost - tripWinner.tripPlan.tripCost)} more than the target winner to reach ${targetLabel}. Checkout: ${formatMoney(entry.tripPlan.tripCost)} (${entry.tripPlan.purchases} × entered option, ${formatMeasurement(entry.tripPlan.surplusAmount, targetPlan.unitMeta.shortLabel)} extra).`
-        : "";
+      const tripMetaLine =
+        targetPlan && entry.tripPlan && tripWinner?.tripPlan
+          ? entry.index === tripWinner.index
+            ? ` Cheapest checkout total for ${targetLabel}. ${entry.tripPlan.purchases} × entered option, ${formatMeasurement(entry.tripPlan.surplusAmount, targetPlan.unitMeta.shortLabel)} extra.`
+            : ` ${formatMoney(entry.tripPlan.tripCost - tripWinner.tripPlan.tripCost)} more than the target winner to reach ${targetLabel}. Checkout: ${formatMoney(entry.tripPlan.tripCost)} (${entry.tripPlan.purchases} × entered option, ${formatMeasurement(entry.tripPlan.surplusAmount, targetPlan.unitMeta.shortLabel)} extra).`
+          : "";
 
       return `
         <li>
@@ -575,6 +695,32 @@ function updateFamilyWarning(activeFamily, excludedCount) {
 
   elements.familyWarning.classList.remove("hidden");
   elements.familyWarning.textContent = `Only ${activeFamily} items are being ranked right now. ${excludedCount} completed option${excludedCount === 1 ? " is" : "s are"} excluded because the unit type does not match.`;
+}
+
+function updateShelfAuditNotice(auditedCount, suspiciousCount) {
+  if (!elements.shelfAuditNotice) return;
+
+  if (!auditedCount) {
+    elements.shelfAuditNotice.classList.add("hidden");
+    elements.shelfAuditNotice.classList.remove("success", "warning");
+    elements.shelfAuditNotice.textContent = "";
+    return;
+  }
+
+  elements.shelfAuditNotice.classList.remove("hidden", "success", "warning");
+
+  if (suspiciousCount) {
+    const consistentCount = auditedCount - suspiciousCount;
+    elements.shelfAuditNotice.classList.add("warning");
+    elements.shelfAuditNotice.textContent = `${suspiciousCount} shelf tag ${suspiciousCount === 1 ? "looks" : "look"} off versus the price, size, pack count, and coupon entered here.${consistentCount ? ` ${consistentCount} other checked tag${consistentCount === 1 ? " looks" : "s look"} normal within rounding.` : ""}`;
+    return;
+  }
+
+  elements.shelfAuditNotice.classList.add("success");
+  elements.shelfAuditNotice.textContent =
+    auditedCount === 1
+      ? "1 shelf tag checked. It looks normal within rounding."
+      : `${auditedCount} shelf tags checked. All look normal within rounding.`;
 }
 
 function buildWinnerContext(comparableCount, excludedCount) {
@@ -613,6 +759,15 @@ function formatNumber(value) {
   }).format(value);
 }
 
+function formatPercent(value) {
+  if (!Number.isFinite(value)) return "—";
+  return new Intl.NumberFormat("en-US", {
+    style: "percent",
+    minimumFractionDigits: value < 0.1 ? 1 : 0,
+    maximumFractionDigits: 1,
+  }).format(value);
+}
+
 function formatMeasurement(value, unitLabel) {
   return `${formatNumber(value)} ${unitLabel}`;
 }
@@ -643,7 +798,9 @@ function syncHash() {
   const hasMeaningfulInput =
     String(state.targetAmount).trim() !== "" ||
     state.items.some((item) => {
-      return [item.name, item.price, item.size, item.coupon].some((value) => String(value).trim() !== "");
+      return [item.name, item.price, item.size, item.coupon, item.shelfTagPrice].some(
+        (value) => String(value).trim() !== "",
+      );
     });
 
   const nextUrl = hasMeaningfulInput

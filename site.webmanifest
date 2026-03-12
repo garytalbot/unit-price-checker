@@ -1,7 +1,7 @@
 {
   "name": "Unit Price Checker",
   "short_name": "Unit Price",
-  "description": "Compare groceries and household items by real cost per unit.",
+  "description": "Compare groceries by real cost per unit, target trip total, and optional shelf-tag audit.",
   "start_url": "/unit-price-checker/",
   "scope": "/unit-price-checker/",
   "display": "standalone",

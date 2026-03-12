@@ -30,6 +30,7 @@ People do this math constantly, and most “price per ounce” tools online are 
 - Handles **oz, lb, g, kg, mL, L, fl oz, cup, pint, quart, gallon, each, dozen**
 - **Shareable URL state** for sending the current comparison to someone else
 - Saves your last comparison locally with **localStorage**
+- Optional **shelf-tag audit** input that compares a claimed aisle unit price against the price, pack count, and coupon you entered
 - Includes **GitHub Pages** workflow and **Netlify** config for painless deployment
 - Adds on-page **help / FAQ / trust** copy so normal people can understand the math without reading the source
 
@@ -40,6 +41,7 @@ A price comparison tool is only useful if the math feels credible. This project 
 - **No backend** — the app is just static files running in the browser
 - **Local-only persistence** — your last comparison stays in your own browser unless you intentionally copy a share link
 - **Honest exclusions** — weight, volume, and count do not get ranked together
+- **Shelf-tag audit** — optional claimed unit-price checks help catch aisle labels that do not line up with the price, pack count, and coupon entered here
 - **Whole-package target math** — target mode rounds up to real packages because stores do not sell fractional cereal boxes unless society has changed dramatically
 
 ## FAQ highlights
@@ -50,6 +52,8 @@ A price comparison tool is only useful if the math feels credible. This project 
   - Because mixed measurement families stay separate on purpose.
 - **Does it send my prices anywhere?**
   - No. There is no server-side calculator and no account system.
+- **What if the shelf tag looks wrong?**
+  - Enter the claimed unit price and unit. The app will show whether that label looks normal within rounding or noticeably off versus the math you entered.
 
 ## Files that matter
 

@@ -6,7 +6,7 @@
     <title>Unit Price Checker — Compare grocery sizes and sale prices fast</title>
     <meta
       name="description"
-      content="A free static web tool for comparing groceries, drinks, and household items by real cost per unit. Handles pack counts, coupons, mixed units, and target-amount trip costs."
+      content="A free static web tool for comparing groceries, drinks, and household items by real cost per unit. Handles pack counts, coupons, mixed units, target-amount trip costs, and optional shelf-tag audits."
     />
     <meta name="theme-color" content="#0f172a" />
     <meta name="color-scheme" content="dark light" />
@@ -16,7 +16,7 @@
     <meta property="og:title" content="Unit Price Checker" />
     <meta
       property="og:description"
-      content="Compare groceries, drinks, and household items by actual cost per unit — and see which option is cheapest for the amount you actually need to buy."
+      content="Compare groceries, drinks, and household items by actual cost per unit — see which option is cheapest for the amount you actually need, and audit shelf-tag unit prices when the aisle math feels suspicious."
     />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://garytalbot.github.io/unit-price-checker/" />
@@ -29,7 +29,7 @@
     <meta name="twitter:title" content="Unit Price Checker" />
     <meta
       name="twitter:description"
-      content="A quick static tool for comparing price-per-unit across grocery sizes, pack counts, sale prices, and real trip totals."
+      content="A quick static tool for comparing price-per-unit across grocery sizes, pack counts, sale prices, real trip totals, and suspicious shelf tags."
     />
     <meta
       name="twitter:image"
@@ -53,7 +53,7 @@
           "price": "0",
           "priceCurrency": "USD"
         },
-        "description": "Free browser-based grocery unit price comparison tool for pack counts, coupons, mixed units, and target-amount trip costs.",
+        "description": "Free browser-based grocery unit price comparison tool for pack counts, coupons, mixed units, target-amount trip costs, and optional shelf-tag audits.",
         "url": "https://garytalbot.github.io/unit-price-checker/",
         "creator": {
           "@type": "Person",
@@ -65,6 +65,7 @@
           "Handle mixed weight, volume, and count units",
           "Include pack counts and coupons",
           "Show the cheapest package for a real target amount",
+          "Audit claimed shelf-tag unit prices against the entered math",
           "Generate shareable links with the current comparison"
         ],
         "browserRequirements": "Requires JavaScript and a modern browser."
@@ -98,6 +99,14 @@
               "@type": "Answer",
               "text": "The tool only ranks items within the same measurement family. Weight, volume, and count items are kept separate so the math stays honest."
             }
+          },
+          {
+            "@type": "Question",
+            "name": "What if the shelf tag unit price looks wrong?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Enter the shelf tag unit price and unit. Unit Price Checker will compare that claim against the price, size, pack count, and coupon you entered, then flag whether it looks normal within rounding or noticeably off."
+            }
           }
         ]
       }
@@ -123,6 +132,7 @@
           <li>Use <strong>pack count</strong> for deals like 3 for $5.</li>
           <li>Add a <strong>coupon</strong> to see the real checkout price.</li>
           <li>Set a <strong>target amount</strong> to see the cheapest total for what you actually need.</li>
+          <li>Add an optional <strong>shelf-tag unit price</strong> if the aisle math feels suspicious.</li>
         </ul>
       </header>
 
@@ -180,6 +190,7 @@
           </div>
 
           <div id="family-warning" class="notice warning hidden" role="alert"></div>
+          <div id="shelf-audit-notice" class="notice hidden" role="status"></div>
 
           <div id="cards" class="cards" aria-live="polite"></div>
         </section>
@@ -221,6 +232,7 @@
               <li>For a sale like <strong>3 for $5</strong>, set price to <strong>$5.00</strong> and pack count to <strong>3</strong>.</li>
               <li>You can compare <strong>32 oz</strong> against <strong>2 lb</strong> without doing conversion math in your head like it’s 2007.</li>
               <li>Use <strong>target amount</strong> when you need a specific quantity and want the cheapest actual checkout total, not just the best unit price.</li>
+              <li>If a shelf tag looks cursed, enter its claimed unit price and let the card audit it.</li>
             </ul>
           </div>
         </aside>
@@ -244,6 +256,10 @@
           <article>
             <h3>Need-based totals</h3>
             <p>See which option is cheapest for the amount you actually need, because the best unit price does not always win the real checkout.</p>
+          </article>
+          <article>
+            <h3>Shelf-tag audit</h3>
+            <p>Optional claimed unit-price inputs help you sanity-check aisle labels against the exact price, pack count, and coupon you entered.</p>
           </article>
           <article>
             <h3>Shareable state</h3>
@@ -281,6 +297,7 @@
             <ul class="trust-list">
               <li>Mixed measurement families are excluded instead of being fake-converted into nonsense.</li>
               <li>Coupons come off before unit math, so “sale” actually means sale.</li>
+              <li>Optional shelf-tag checks compare claimed aisle math against the price, pack count, and coupon you entered.</li>
               <li>Target mode rounds up to whole packages because stores, tragically, refuse to sell 0.43 of a cereal box.</li>
               <li>Your last comparison stays in this browser unless you deliberately copy a share link.</li>
             </ul>
@@ -308,6 +325,14 @@
               <summary>Why did one item get excluded?</summary>
               <p>
                 Only items in the same measurement family rank together. Weight, volume, and count stay separate on purpose so the math does not freestyle into cursed soup.
+              </p>
+            </details>
+
+            <details>
+              <summary>What if the shelf tag’s unit price looks wrong?</summary>
+              <p>
+                Enter the shelf tag’s claimed unit price and unit. The card will show whether it looks normal within rounding or noticeably off versus the price,
+                size, pack count, and coupon you entered here.
               </p>
             </details>
           </article>
@@ -404,7 +429,32 @@
               />
             </span>
           </label>
+
+          <label>
+            Shelf tag says (optional)
+            <span class="input-wrap money-wrap">
+              <span aria-hidden="true">$</span>
+              <input
+                class="field shelf-tag-price"
+                data-field="shelfTagPrice"
+                type="number"
+                inputmode="decimal"
+                min="0"
+                step="0.01"
+                placeholder="0.13"
+              />
+            </span>
+          </label>
+
+          <label>
+            Shelf tag unit
+            <select class="field shelf-tag-unit" data-field="shelfTagUnit"></select>
+          </label>
         </div>
+
+        <p class="microcopy item-help">
+          Optional: enter the shelf tag’s claimed unit price to see whether it matches the math here.
+        </p>
 
         <div class="item-output">
           <div class="metric">
@@ -423,6 +473,7 @@
             <span class="metric-label">Trip cost</span>
             <strong class="trip-cost">—</strong>
           </div>
+          <p class="shelf-tag-feedback hidden"></p>
           <p class="metric-note">Fill in price, size, and unit to compare.</p>
         </div>
       </article>
