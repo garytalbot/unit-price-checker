@@ -1,0 +1,18 @@
+{
+  "name": "Unit Price Checker",
+  "short_name": "Unit Price",
+  "description": "Compare groceries and household items by real cost per unit.",
+  "start_url": "/unit-price-checker/",
+  "scope": "/unit-price-checker/",
+  "display": "standalone",
+  "background_color": "#08111f",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "assets/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

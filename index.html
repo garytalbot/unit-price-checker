@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Unit Price Checker — Compare grocery sizes and sale prices fast</title>
+    <meta
+      name="description"
+      content="A free static web tool for comparing groceries, drinks, and household items by real cost per unit. Handles pack counts, coupons, and mixed units like oz, lb, mL, and liters."
+    />
+    <meta name="theme-color" content="#0f172a" />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="robots" content="index,follow" />
+    <link rel="canonical" href="https://garytalbot.github.io/unit-price-checker/" />
+
+    <meta property="og:title" content="Unit Price Checker" />
+    <meta
+      property="og:description"
+      content="Compare groceries, drinks, and household items by actual cost per unit. Built for the eternal 'is the bigger one actually cheaper?' debate."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://garytalbot.github.io/unit-price-checker/" />
+    <meta
+      property="og:image"
+      content="https://garytalbot.github.io/unit-price-checker/assets/og-card.svg"
+    />
+    <meta property="og:image:alt" content="Unit Price Checker preview card" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Unit Price Checker" />
+    <meta
+      name="twitter:description"
+      content="A quick static tool for comparing price-per-unit across grocery sizes, pack counts, and sale prices."
+    />
+    <meta
+      name="twitter:image"
+      content="https://garytalbot.github.io/unit-price-checker/assets/og-card.svg"
+    />
+
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="site.webmanifest" />
+    <link rel="stylesheet" href="assets/styles.css" />
+    <script defer src="assets/app.js"></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="hero panel">
+        <p class="eyebrow">Static tool · no sign-in · phone-friendly</p>
+        <h1>Unit Price Checker</h1>
+        <p class="hero-copy">
+          Compare groceries, drinks, and household items by actual cost per unit.
+          Great for the classic store aisle question: <em>is the giant one genuinely a better deal, or is the shelf tag lying to me again?</em>
+        </p>
+
+        <div class="hero-actions">
+          <button id="load-sample" class="button primary" type="button">Load example</button>
+          <button id="copy-link" class="button secondary" type="button">Copy share link</button>
+          <button id="reset-form" class="button ghost" type="button">Reset</button>
+        </div>
+
+        <ul class="hero-notes">
+          <li>Use <strong>pack count</strong> for deals like 3 for $5.</li>
+          <li>Add a <strong>coupon</strong> to see the real checkout price.</li>
+          <li>Switch the <strong>comparison unit</strong> to ounces, grams, liters, or count.</li>
+        </ul>
+      </header>
+
+      <main class="panel-grid">
+        <section class="panel controls-panel" aria-labelledby="tool-heading">
+          <div class="panel-heading">
+            <div>
+              <p class="kicker">Calculator</p>
+              <h2 id="tool-heading">Compare up to three options</h2>
+            </div>
+            <p>
+              Mixed measurement families get excluded on purpose. If one thing is sold by weight and the other is sold by count,
+              the math should not get to freestyle.
+            </p>
+          </div>
+
+          <div class="control-row wide">
+            <label for="comparison-unit">Comparison unit</label>
+            <select id="comparison-unit" aria-describedby="comparison-unit-help"></select>
+            <p id="comparison-unit-help" class="microcopy">
+              We auto-pick a sensible default from the items you enter, but you can change it anytime.
+            </p>
+          </div>
+
+          <div id="family-warning" class="notice warning hidden" role="alert"></div>
+
+          <div id="cards" class="cards" aria-live="polite"></div>
+        </section>
+
+        <aside class="panel summary-panel" aria-labelledby="summary-heading">
+          <div class="panel-heading">
+            <div>
+              <p class="kicker">Live results</p>
+              <h2 id="summary-heading">Best buy</h2>
+            </div>
+            <p>Ranking updates as you type.</p>
+          </div>
+
+          <div id="summary-empty" class="summary-empty">
+            Add at least one complete item to see the ranking.
+          </div>
+
+          <div id="summary-content" class="hidden">
+            <div class="winner-card">
+              <p class="winner-label">Cheapest option</p>
+              <h3 id="winner-name">—</h3>
+              <p id="winner-price-line" class="winner-price-line"></p>
+              <p id="winner-context" class="winner-context"></p>
+            </div>
+
+            <ol id="ranking-list" class="ranking-list"></ol>
+          </div>
+
+          <div class="tips">
+            <h3>Quick tips</h3>
+            <ul>
+              <li>For a sale like <strong>3 for $5</strong>, set price to <strong>$5.00</strong> and pack count to <strong>3</strong>.</li>
+              <li>You can compare <strong>32 oz</strong> against <strong>2 lb</strong> without doing conversion math in your head like it’s 2007.</li>
+              <li><strong>Match price</strong> shows the exact price an option would need to hit to tie the current winner.</li>
+            </ul>
+          </div>
+        </aside>
+      </main>
+
+      <section class="feature-strip panel" aria-labelledby="feature-heading">
+        <div>
+          <p class="kicker">Why it’s useful</p>
+          <h2 id="feature-heading">Simple enough to use in a parking lot, useful enough to keep around.</h2>
+        </div>
+
+        <div class="feature-list">
+          <article>
+            <h3>Mixed-unit conversion</h3>
+            <p>Compare ounces to pounds, milliliters to liters, or count-based items without grabbing a second calculator.</p>
+          </article>
+          <article>
+            <h3>Sale-aware pricing</h3>
+            <p>Pack counts and coupons are built in, so the result reflects what you actually pay instead of the fantasy sticker price.</p>
+          </article>
+          <article>
+            <h3>Shareable state</h3>
+            <p>Copy a link with the current comparison baked in. Handy for sending “which one should I buy?” debates to somebody else.</p>
+          </article>
+        </div>
+      </section>
+
+      <footer class="site-footer">
+        <p>
+          Built as a no-backend static tool. Save it, share it, or deploy it anywhere that can serve plain files.
+        </p>
+      </footer>
+    </div>
+
+    <template id="item-template">
+      <article class="item-card">
+        <div class="item-card-header">
+          <span class="item-badge">Option 1</span>
+          <input
+            class="field item-name"
+            data-field="name"
+            type="text"
+            maxlength="60"
+            placeholder="Example: Store brand oats"
+            aria-label="Item name"
+          />
+        </div>
+
+        <div class="field-grid">
+          <label>
+            Price
+            <span class="input-wrap money-wrap">
+              <span aria-hidden="true">$</span>
+              <input
+                class="field price"
+                data-field="price"
+                type="number"
+                inputmode="decimal"
+                min="0"
+                step="0.01"
+                placeholder="4.99"
+              />
+            </span>
+          </label>
+
+          <label>
+            Size per item
+            <input
+              class="field size"
+              data-field="size"
+              type="number"
+              inputmode="decimal"
+              min="0"
+              step="0.01"
+              placeholder="32"
+            />
+          </label>
+
+          <label>
+            Unit
+            <select class="field unit" data-field="unit"></select>
+          </label>
+
+          <label>
+            Pack count
+            <input
+              class="field pack-count"
+              data-field="packCount"
+              type="number"
+              inputmode="numeric"
+              min="1"
+              step="1"
+              placeholder="1"
+            />
+          </label>
+
+          <label>
+            Coupon / discount
+            <span class="input-wrap money-wrap">
+              <span aria-hidden="true">$</span>
+              <input
+                class="field coupon"
+                data-field="coupon"
+                type="number"
+                inputmode="decimal"
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+              />
+            </span>
+          </label>
+        </div>
+
+        <div class="item-output">
+          <div class="metric">
+            <span class="metric-label">Effective price</span>
+            <strong class="effective-price">—</strong>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Unit price</span>
+            <strong class="unit-price">—</strong>
+          </div>
+          <div class="metric">
+            <span class="metric-label">Match price</span>
+            <strong class="match-price">—</strong>
+          </div>
+          <p class="metric-note">Fill in price, size, and unit to compare.</p>
+        </div>
+      </article>
+    </template>
+  </body>
+</html>

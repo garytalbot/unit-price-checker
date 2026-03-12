@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Unit Price Checker icon">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="16" fill="#08111f" />
+  <path d="M15 21a8 8 0 0 1 8-8h19l11 11v19a8 8 0 0 1-8 8H23a8 8 0 0 1-8-8V21Z" fill="url(#bg)" opacity="0.9"/>
+  <path d="M42 13v9a2 2 0 0 0 2 2h9" fill="none" stroke="#7dd3fc" stroke-width="3" stroke-linecap="round"/>
+  <path d="M24 37h16M24 31h9M24 43h11" stroke="#e5eefb" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="45" cy="42" r="7" fill="#34d399"/>
+  <path d="M42 42.5l2.2 2.2L48.5 40" fill="none" stroke="#032012" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

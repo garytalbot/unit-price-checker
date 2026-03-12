@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://garytalbot.github.io/unit-price-checker/sitemap.xml
