@@ -65,12 +65,14 @@ A price comparison tool is only useful if the math feels credible. This project 
 - `assets/launch/split-winner-proof-shot.png` — the real in-app proof screenshot used inside the share card.
 - `assets/launch/reddit-real-use-oats-comparison.jpg` — filled real-use screenshot for launch posts, showing a realistic oats comparison with mixed units, a couponed bundle, target-amount mode, and a shelf-tag warning.
 - `assets/favicon-512.png` plus derived app icons (`icon-192.png`, `icon-512.png`, `apple-touch-icon.png`, `favicon.ico`, and PNG favicons) now power the live favicon/app-icon surface instead of leaving the repo with a nice icon that browsers and homescreens mostly never saw.
+- The app now behaves like a proper lightweight PWA: install CTA when the browser allows it, manifest shortcuts, and a tiny service worker so the shell still opens offline with your last saved comparison.
 
 ## Files that matter
 
 - `index.html` — app shell and content
 - `assets/styles.css` — responsive styling
-- `assets/app.js` — calculator logic, unit conversion, ranking, share links, persistence
+- `assets/app.js` — calculator logic, unit conversion, ranking, share links, persistence, install prompt wiring, and offline-status messaging
+- `assets/service-worker.js` — lightweight offline caching for the app shell and key icons so the installed app opens without a network tantrum
 - `.github/workflows/deploy-pages.yml` — automatic GitHub Pages deploy on push to `main`
 - `netlify.toml` — zero-config Netlify deploy
 

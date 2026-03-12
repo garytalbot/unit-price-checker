@@ -285,16 +285,24 @@ const elements = {
   copyVerdict: document.querySelector("#copy-verdict"),
   loadSample: document.querySelector("#load-sample"),
   copyLink: document.querySelector("#copy-link"),
+  installApp: document.querySelector("#install-app"),
+  installStrip: document.querySelector("#install-strip"),
+  installStripButton: document.querySelector("#install-strip-button"),
+  installStatus: document.querySelector("#install-status"),
   resetForm: document.querySelector("#reset-form"),
 };
 
 let state = loadState();
 let currentShareBundleText = "";
 let copyVerdictResetTimer = 0;
+let deferredInstallPrompt = null;
 
 renderCards();
 applyStateToForm();
 bindEvents();
+registerServiceWorker();
+setupInstallPrompt();
+updateConnectivityStatus();
 update();
 
 function createEmptyItem(defaultUnit = "oz") {
@@ -359,6 +367,11 @@ function stringifyField(value) {
 }
 
 function loadState() {
+  if (window.location.hash === "#sample") {
+    window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
+    return normalizeState(SAMPLE_STATE);
+  }
+
   const fromHash = parseStateFromHash();
   if (fromHash) return normalizeState(fromHash);
 
@@ -561,6 +574,88 @@ function selectShareBundleText() {
 function setShareBundleStatus(message) {
   if (!elements.shareBundleStatus) return;
   elements.shareBundleStatus.textContent = message;
+}
+
+
+function registerServiceWorker() {
+  if (!("serviceWorker" in navigator)) return;
+
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("assets/service-worker.js").catch((error) => {
+      console.warn("Service worker registration failed", error);
+    });
+  });
+}
+
+function setupInstallPrompt() {
+  window.addEventListener("beforeinstallprompt", (event) => {
+    event.preventDefault();
+    deferredInstallPrompt = event;
+    showInstallCallToAction();
+    setInstallStatus("Install is ready when you want it.");
+  });
+
+  window.addEventListener("appinstalled", () => {
+    deferredInstallPrompt = null;
+    hideInstallCallToAction();
+    setInstallStatus("Installed. Your last comparison will still stay local to this browser.");
+  });
+
+  window.addEventListener("online", updateConnectivityStatus);
+  window.addEventListener("offline", updateConnectivityStatus);
+
+  elements.installApp?.addEventListener("click", triggerInstallPrompt);
+  elements.installStripButton?.addEventListener("click", triggerInstallPrompt);
+}
+
+async function triggerInstallPrompt() {
+  if (!deferredInstallPrompt) {
+    setInstallStatus("Install depends on your browser. If the button never appears, use Add to Home Screen from the browser menu.");
+    return;
+  }
+
+  deferredInstallPrompt.prompt();
+  const choice = await deferredInstallPrompt.userChoice.catch(() => null);
+  deferredInstallPrompt = null;
+  hideInstallCallToAction();
+
+  if (choice?.outcome === "accepted") {
+    setInstallStatus("Nice. Unit Price Checker is installing now.");
+  } else {
+    setInstallStatus("No problem. You can still use the browser menu to install it later.");
+  }
+}
+
+function showInstallCallToAction() {
+  elements.installApp?.classList.remove("hidden");
+  elements.installStrip?.classList.remove("hidden");
+}
+
+function hideInstallCallToAction() {
+  elements.installApp?.classList.add("hidden");
+  elements.installStrip?.classList.add("hidden");
+}
+
+function updateConnectivityStatus() {
+  if (!elements.installStatus) return;
+
+  const online = navigator.onLine;
+  elements.installStatus.classList.toggle("is-online", online);
+  elements.installStatus.classList.toggle("is-offline", !online);
+
+  if (online) {
+    if (!deferredInstallPrompt && !elements.installStrip?.classList.contains("hidden")) {
+      setInstallStatus("Online. Install is ready when your browser offers it.");
+    }
+    return;
+  }
+
+  setInstallStatus("Offline mode: the app shell and your last saved comparison should still open cleanly.");
+}
+
+function setInstallStatus(message) {
+  if (!elements.installStatus) return;
+  elements.installStatus.textContent = message;
 }
 
 function update() {

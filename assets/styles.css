@@ -136,6 +136,56 @@ textarea {
   z-index: 1;
 }
 
+.install-strip {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(16rem, 0.95fr);
+  gap: 1rem;
+  margin: 1rem 0 0.6rem;
+  padding: 1rem 1.05rem;
+  border-radius: 22px;
+  border: 1px solid rgba(125, 211, 252, 0.22);
+  background:
+    radial-gradient(circle at top right, rgba(125, 211, 252, 0.16), transparent 35%),
+    linear-gradient(135deg, rgba(13, 18, 36, 0.9), rgba(24, 15, 47, 0.92));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+}
+
+.install-strip-kicker {
+  margin-bottom: 0.4rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.72rem;
+  color: #bae6fd;
+}
+
+.install-strip h2 {
+  margin-bottom: 0.45rem;
+  font-size: clamp(1.1rem, 2vw, 1.45rem);
+}
+
+.install-strip h2::after {
+  display: none;
+}
+
+.install-strip-copy,
+.install-status {
+  margin-bottom: 0;
+}
+
+.install-strip-actions {
+  display: grid;
+  align-content: center;
+  gap: 0.7rem;
+}
+
+.install-status.is-online {
+  color: #86efac;
+}
+
+.install-status.is-offline {
+  color: #fde68a;
+}
+
 .hero-ribbon {
   display: flex;
   flex-wrap: wrap;
@@ -1138,5 +1188,15 @@ h3 {
   .ranking-topline {
     flex-direction: column;
     align-items: flex-start;
+  }
+}
+
+@media (max-width: 780px) {
+  .install-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .install-strip-actions {
+    align-content: start;
   }
 }
