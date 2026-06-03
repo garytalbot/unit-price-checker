@@ -489,14 +489,25 @@ function bindEvents() {
 
   elements.copyLink.addEventListener("click", async () => {
     const url = buildShareUrl();
+    const verdict = currentShareBundleText || "";
     const original = elements.copyLink.textContent;
 
     try {
-      await navigator.clipboard.writeText(url);
-      elements.copyLink.textContent = "Link copied";
+      if (verdict) {
+        await navigator.clipboard.writeText(`${verdict}
+
+Exact comparison: ${url}`);
+        elements.copyLink.textContent = "Bundle copied";
+        setShareBundleStatus("Copied the plain-English verdict plus the exact share link.");
+      } else {
+        await navigator.clipboard.writeText(url);
+        elements.copyLink.textContent = "Link copied";
+        setShareBundleStatus("Copied the exact share link.");
+      }
     } catch (error) {
       console.warn("Clipboard write failed", error);
       elements.copyLink.textContent = "Copy failed";
+      setShareBundleStatus("Clipboard blocked. You can still copy the text below manually.");
     }
 
     window.setTimeout(() => {

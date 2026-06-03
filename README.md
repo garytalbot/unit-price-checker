@@ -28,7 +28,7 @@ People do this math constantly, and most “price per ounce” tools online are 
 - Compare up to **3 options** side by side
 - Supports **weight**, **volume**, and **count** measurements
 - Handles **oz, lb, g, kg, mL, L, fl oz, cup, pint, quart, gallon, each, dozen**
-- **Copyable plain-English verdict bundle** that includes the winner, the real checkout winner when target mode changes the answer, any shelf-tag warning, and the exact share URL
+- **Copyable verdict + share link button** that grabs the plain-English winner, the real checkout winner when target mode changes the answer, any shelf-tag warning, and the exact share URL in one tap
 - **Starter presets** for realistic grocery/household scenarios like breakfast cereal, paper towels, sparkling water, and ground coffee so first-time visitors land on something useful immediately
 - **Quick target presets** for common shopping amounts like 32 oz, 64 oz, 1 gallon, or 12 count so you can get to the real checkout winner faster
 - **Shareable URL state** for sending the current comparison to someone else
