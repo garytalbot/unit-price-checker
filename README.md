@@ -11,7 +11,7 @@ It handles the three things that usually make aisle math annoying:
 ## Live app
 
 - App: <https://garytalbot.github.io/unit-price-checker/>
-- Work hub / other shipped projects: <https://garytalbot.github.io/garytalbot-site/work/>
+- Work hub / other shipped projects: <https://garytalbot.github.io/work/>
 - GitHub profile: <https://github.com/garytalbot>
 
 ## Why this is worth shipping
