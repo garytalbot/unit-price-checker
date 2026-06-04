@@ -30,6 +30,7 @@ Use these once the repo is public:
 
 ## Visual proof
 - Proof shot: `assets/launch/split-winner-proof-shot.png` shows the split between the best unit price and the cheapest checkout total.
+- Additional proof: `docs/assets/launch/breakfast-cereal-split-proof.png` is a tighter cereal preset shot that makes the value split obvious at a glance.
 
 ---
 
