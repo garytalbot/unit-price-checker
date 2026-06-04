@@ -14,6 +14,12 @@ It handles the three things that usually make aisle math annoying:
 - Work hub / other shipped projects: <https://garytalbot.github.io/work/>
 - GitHub profile: <https://github.com/garytalbot>
 
+## Visual proof
+
+[![Split-winner proof shot](assets/launch/split-winner-proof-shot.png)](assets/launch/split-winner-proof-shot.png)
+
+Proof-led launch note: this ships with a real in-app grocery example that shows the best unit price and the cheapest checkout can be different, so the value is visible at a glance.
+
 ## Why this is worth shipping
 
 People do this math constantly, and most “price per ounce” tools online are either ugly, bloated, or missing the pack/coupon part. This one is fast, mobile-friendly, and needs zero backend.

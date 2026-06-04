@@ -28,6 +28,9 @@ Use these once the repo is public:
 - Live: https://garytalbot.github.io/unit-price-checker/
 - GitHub: https://github.com/garytalbot/unit-price-checker
 
+## Visual proof
+- Proof shot: `assets/launch/split-winner-proof-shot.png` shows the split between the best unit price and the cheapest checkout total.
+
 ---
 
 ## X
@@ -43,6 +46,8 @@ It handles:
 So you can see the real cheapest option without doing fractions next to a wall of peanut butter.
 
 Live: https://garytalbot.github.io/unit-price-checker/
+
+Launch note: the cheapest checkout total is not always the best unit price, and this tool makes that split obvious.
 
 ### Tighter alt
 Shipped: **Unit Price Checker**
